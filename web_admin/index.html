@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="fr" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>ASTT E-Sport | Dashboard Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body { background-color: #121212; color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { background-color: #1e1e1e; border: 1px solid #333; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .card-header { background-color: #2a2a2a; border-bottom: 1px solid #333; font-weight: bold; font-size: 1.2rem; }
+        .hidden { display: none !important; }
+        .announcement-row { border-bottom: 1px solid #333; padding: 15px 0; }
+        .btn-astt { background-color: #00d4ff; color: #000; font-weight: bold; }
+        .btn-astt:hover { background-color: #00b3d6; color: #000; }
+        .nav-tabs .nav-link { color: #aaa; font-size: 1.1rem; padding: 15px 25px; }
+        .nav-tabs .nav-link.active { background-color: #1e1e1e; color: #00d4ff; border-color: #333 #333 #1e1e1e; font-weight: bold; }
+        .nav-tabs { border-bottom: 1px solid #333; }
+        label { font-size: 1.1rem; margin-bottom: 8px; font-weight: 500; color: #ccc; }
+        textarea, input, select { resize: vertical; }
+
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark border-bottom border-secondary mb-4 py-3">
+    <div class="container">
+        <span class="navbar-brand mb-0 h1 fs-3"><i class="fas fa-gamepad text-info"></i> ASTT E-Sport | Espace Staff</span>
+        <button id="btnLogout" class="btn btn-outline-danger btn-lg hidden"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+    </div>
+</nav>
+
+<!-- Toast de confirmation -->
+<div class="toast-container">
+    <div id="saveToast" class="toast align-items-center text-bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body fs-5"><i class="fas fa-check-circle me-2"></i><span id="toastMsg">Sauvegardé !</span></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div id="loginSection" class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header text-center py-3 fs-4">Connexion requise</div>
+                <div class="card-body p-4">
+                    <form id="loginForm">
+                        <div class="mb-4">
+                            <label>Adresse Email</label>
+                            <input type="email" id="emailInput" class="form-control form-control-lg bg-dark text-white" required>
+                        </div>
+                        <div class="mb-4">
+                            <label>Mot de passe</label>
+                            <input type="password" id="passwordInput" class="form-control form-control-lg bg-dark text-white" required>
+                        </div>
+                        <button type="submit" class="btn btn-astt btn-lg w-100 py-3">Se connecter</button>
+                    </form>
+                    <div id="loginError" class="alert alert-danger mt-4 hidden fs-5"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboardSection" class="hidden">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#live" type="button"><i class="fas fa-video text-info"></i> WebTV (Live)</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tournoi" type="button"><i class="fas fa-trophy text-warning"></i> Tournois</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#annonces" type="button"><i class="fas fa-newspaper text-success"></i> Annonces</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#divers" type="button"><i class="fas fa-cogs text-secondary"></i> Divers</button></li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+
+            <!-- ═══════════════════════════════════════════ ONGLET LIVE ═══ -->
+            <div class="tab-pane fade show active" id="live">
+                <div class="card p-2">
+                    <div class="card-body">
+                        
+                        <div class="mb-4">
+                            <label><i class="fas fa-satellite-dish"></i> Statut du Live</label>
+                            <select id="liveState" class="form-select form-select-lg bg-dark text-white" onchange="toggleLiveDates()">
+                                <option value="0">Inactif</option>
+                                <option value="1">Programmé</option>
+                                <option value="2">En Direct</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4 hidden" id="liveScheduledDateContainer">
+                            <label><i class="far fa-calendar-alt"></i> Date et heure prévue</label>
+                            <input type="datetime-local" id="liveScheduledDate" class="form-control form-control-lg bg-dark text-white">
+                        </div>
+
+                        <hr class="border-secondary my-4">
+
+                        <div class="mb-4"><label><i class="fas fa-heading"></i> Titre de la tuile Live</label><input type="text" id="liveTitle" class="form-control form-control-lg bg-dark text-white" placeholder="ex: WebTV - Tournoi FIFA"></div>
+                        <div class="mb-5"><label><i class="fas fa-align-left"></i> Description détaillée</label><textarea id="liveDesc" class="form-control form-control-lg bg-dark text-white" rows="4"></textarea></div>
+                        
+                        <button class="btn btn-success btn-lg w-100 py-3 fs-5" onclick="saveLiveContent()"><i class="fas fa-save"></i> Enregistrer et Publier (Live)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════ ONGLET TOURNOI ═══ -->
+            <div class="tab-pane fade" id="tournoi">
+                <div class="card p-2">
+                    <div class="card-body">
+
+                        <div class="mb-4">
+                            <label><i class="fas fa-tasks"></i> Statut du Tournoi</label>
+                            <select id="tournoiState" class="form-select form-select-lg bg-dark text-white" onchange="toggleTournoiDates()">
+                                <option value="0">Inactif</option>
+                                <option value="1">Inscriptions Ouvertes</option>
+                                <option value="2">Événement à venir</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4 hidden" id="tournoiRegDateContainer">
+                            <label><i class="far fa-clock"></i> Date de fin des inscriptions</label>
+                            <input type="datetime-local" id="tournoiRegEndDate" class="form-control form-control-lg bg-dark text-white">
+                        </div>
+
+                        <div class="mb-4 hidden" id="tournoiStartDateContainer">
+                            <label><i class="far fa-calendar-check"></i> Date de début de l'événement</label>
+                            <input type="datetime-local" id="tournoiStartDate" class="form-control form-control-lg bg-dark text-white">
+                        </div>
+
+                        <hr class="border-secondary my-4">
+
+                        <div class="mb-4"><label><i class="fas fa-heading"></i> Titre du Tournoi</label><input type="text" id="tournoiTitle" class="form-control form-control-lg bg-dark text-white"></div>
+                        <div class="mb-4"><label><i class="fas fa-align-left"></i> Informations (Prix, dates, règles...)</label><textarea id="tournoiDesc" class="form-control form-control-lg bg-dark text-white" rows="4"></textarea></div>
+                        <div class="mb-5"><label><i class="fas fa-link"></i> URL d'inscription</label><input type="text" id="tournoiUrl" class="form-control form-control-lg bg-dark text-white"></div>
+                        
+                        <button class="btn btn-success btn-lg w-100 py-3 fs-5" onclick="saveTournoiContent()"><i class="fas fa-save"></i> Enregistrer et Publier (Tournoi)</button>
+                    </div>
+                </div>
+
+                <div class="card p-2 mt-4">
+                    <div class="card-header bg-dark text-warning border-secondary fs-5"><i class="fas fa-archive"></i> Archives des Tournois (Synchronisés)</div>
+                    <div class="card-body bg-dark">
+                        <div id="archivesList" class="list-group">
+                            <div class="text-center text-muted py-3">Chargement...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════ ONGLET ANNONCES ═══ -->
+            <div class="tab-pane fade" id="annonces">
+                <div class="row mt-4">
+                    <div class="col-lg-5">
+                        <div class="card mt-0">
+                            <div class="card-header bg-primary text-white" id="formTitle"><i class="fas fa-plus-circle"></i> Créer une annonce</div>
+                            <div class="card-body">
+                                <div class="mb-4"><label>Titre de l'annonce</label><input type="text" id="newAnnounceTitle" class="form-control form-control-lg bg-dark text-white"></div>
+                                <div class="mb-4"><label>Contenu de l'annonce</label><textarea id="newAnnounceDesc" class="form-control form-control-lg bg-dark text-white" rows="6"></textarea></div>
+                                <div class="mb-4"><label>Texte du bouton (Optionnel)</label><input type="text" id="newAnnounceLinkText" class="form-control form-control-lg bg-dark text-white" placeholder="ex: EN SAVOIR PLUS"></div>
+                                <div class="mb-4"><label>URL du bouton (Optionnel)</label><input type="text" id="newAnnounceUrl" class="form-control form-control-lg bg-dark text-white" placeholder="ex: https://..."></div>
+                                <button id="btnSubmitAnnounce" class="btn btn-primary btn-lg w-100 py-3 mb-2" onclick="submitAnnouncement()"><i class="fas fa-paper-plane"></i> Publier l'annonce</button>
+                                <button id="btnCancelEdit" class="btn btn-outline-secondary w-100 hidden" onclick="cancelEdit()">Annuler la modification</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="card mt-0 h-100">
+                            <div class="card-header"><i class="fas fa-list"></i> Annonces en ligne</div>
+                            <div class="card-body overflow-auto" style="max-height: 700px;">
+                                <div id="announcementsList"><div class="text-center text-muted mt-5 fs-5">Chargement...</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════ ONGLET DIVERS ═══ -->
+            <div class="tab-pane fade" id="divers">
+                <div class="card p-2 mb-4">
+                    <div class="card-body">
+                        <h4 class="mb-4"><i class="fas fa-link"></i> Réseaux Sociaux</h4>
+                        <div class="mb-4"><label><i class="fab fa-twitch text-info"></i> URL de la chaîne Twitch</label><input type="text" id="twitchUrl" class="form-control form-control-lg bg-dark text-white"></div>
+                        <div class="mb-4"><label><i class="fab fa-discord text-primary"></i> URL d'invitation Discord</label><input type="text" id="discordUrl" class="form-control form-control-lg bg-dark text-white" placeholder="https://discord.gg/..."></div>
+                        <div class="mb-4"><label><i class="fab fa-youtube text-danger"></i> URL de la chaîne YouTube</label><input type="text" id="youtubeUrl" class="form-control form-control-lg bg-dark text-white" placeholder="https://youtube.com/..."></div>
+                        <button class="btn btn-info w-100 py-2 fs-5 text-dark fw-bold" onclick="saveSocialContent()"><i class="fas fa-save"></i> Sauvegarder les liens</button>
+                    </div>
+                </div>
+
+                <div class="card p-2 mb-4">
+                    <div class="card-body">
+                        <h4 class="mb-4"><i class="fas fa-mobile-alt text-danger"></i> Mise à jour de l'app</h4>
+                        <div class="alert alert-danger fs-6 mb-4"><i class="fas fa-exclamation-triangle"></i> Forcer une mise à jour chez tous les utilisateurs.</div>
+                        <p class="text-warning mb-4">Version exigée en base de données : <strong id="currentFirebaseVersion" class="text-white fs-5">Chargement...</strong></p>
+                        <div class="row mb-4">
+                            <div class="col-md-3"><label>Version cible</label><input type="text" id="updateVersion" class="form-control form-control-lg bg-dark text-white" placeholder="ex: 1.06"></div>
+                            <div class="col-md-9"><label>Lien de l'APK</label><input type="text" id="updateUrl" class="form-control form-control-lg bg-dark text-white"></div>
+                        </div>
+                        <div class="mb-4"><label>Message affiché</label><textarea id="updateMessage" class="form-control form-control-lg bg-dark text-white" rows="2"></textarea></div>
+                        <button class="btn btn-danger w-100 py-2 fs-5" onclick="saveUpdateContent()"><i class="fas fa-rocket"></i> Déployer l'Alerte</button>
+                    </div>
+                </div>
+
+                <div class="card p-2">
+                    <div class="card-body">
+                        <h4 class="mb-4 text-warning"><i class="fas fa-bug"></i> Débogage & Notifications</h4>
+                        <div class="form-check form-switch fs-5 mb-2">
+                            <input class="form-check-input" type="checkbox" id="testModeActive" style="transform: scale(1.5); margin-right: 12px; cursor: pointer;">
+                            <label class="form-check-label text-white" for="testModeActive">
+                                <strong>Mode Test</strong> (Coupe l'envoi des notifications via le serveur)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDFE6P0GHVGcC5VBjwg32eyZrhLp1JmKBg",
+        authDomain: "astt-e-sport.firebaseapp.com",
+        projectId: "astt-e-sport",
+        storageBucket: "astt-e-sport.firebasestorage.app",
+        messagingSenderId: "678391264155",
+        appId: "1:678391264155:web:b0b4faa4233837034de73e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let editingAnnounceId = null;
+    let announcementsData = {};
+
+    function showToast(msg = "Sauvegardé !", isError = false) {
+        const toastEl = document.getElementById('saveToast');
+        toastEl.classList.remove('text-bg-success', 'text-bg-danger');
+        toastEl.classList.add(isError ? 'text-bg-danger' : 'text-bg-success');
+        document.getElementById('toastMsg').textContent = msg;
+        new bootstrap.Toast(toastEl, { delay: 3000 }).show();
+    }
+
+    function formatDateForInput(firebaseTimestamp) {
+        if (!firebaseTimestamp) return "";
+        const date = firebaseTimestamp.toDate();
+        // Format YYYY-MM-DDTHH:mm
+        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+        return date.toISOString().slice(0, 16);
+    }
+    
+    function parseDateFromInput(value) {
+        if (!value) return null;
+        return firebase.firestore.Timestamp.fromDate(new Date(value));
+    }
+
+    function toggleLiveDates() {
+        const state = parseInt(document.getElementById('liveState').value);
+        if (state === 1) document.getElementById('liveScheduledDateContainer').classList.remove('hidden');
+        else document.getElementById('liveScheduledDateContainer').classList.add('hidden');
+    }
+
+    function toggleTournoiDates() {
+        const state = parseInt(document.getElementById('tournoiState').value);
+        if (state === 1) {
+            document.getElementById('tournoiRegDateContainer').classList.remove('hidden');
+            document.getElementById('tournoiStartDateContainer').classList.remove('hidden');
+        } else if (state === 2) {
+            document.getElementById('tournoiRegDateContainer').classList.add('hidden');
+            document.getElementById('tournoiStartDateContainer').classList.remove('hidden');
+        } else {
+            document.getElementById('tournoiRegDateContainer').classList.add('hidden');
+            document.getElementById('tournoiStartDateContainer').classList.add('hidden');
+        }
+    }
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('btnLogout').classList.remove('hidden');
+            loadStatus();
+            loadAnnouncements();
+            loadArchives();
+        } else {
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('btnLogout').classList.add('hidden');
+        }
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', e => {
+        e.preventDefault();
+        auth.signInWithEmailAndPassword(
+            document.getElementById('emailInput').value,
+            document.getElementById('passwordInput').value
+        ).catch(() => {
+            document.getElementById('loginError').innerText = "Erreur de connexion. Vérifiez vos identifiants.";
+            document.getElementById('loginError').classList.remove('hidden');
+        });
+    });
+
+    document.getElementById('btnLogout').addEventListener('click', () => auth.signOut());
+
+    function loadStatus() {
+        db.collection('app_state').doc('status').onSnapshot(doc => {
+            if (!doc.exists) return;
+            const data = doc.data();
+
+            let liveState = data.liveState;
+            if (liveState === undefined) liveState = data.isLiveActive ? 2 : 0;
+            document.getElementById('liveState').value = liveState;
+            document.getElementById('liveScheduledDate').value = formatDateForInput(data.liveScheduledDate);
+            toggleLiveDates();
+            
+            document.getElementById('liveTitle').value = data.liveTitle || "";
+            document.getElementById('liveDesc').value = data.liveDesc || "";
+
+            let tournoiState = data.tournamentState;
+            if (tournoiState === undefined) tournoiState = data.isTournamentActive ? 1 : 0;
+            document.getElementById('tournoiState').value = tournoiState;
+            document.getElementById('tournoiRegEndDate').value = formatDateForInput(data.tournamentRegistrationEndDate);
+            document.getElementById('tournoiStartDate').value = formatDateForInput(data.tournamentStartDate);
+            toggleTournoiDates();
+
+            document.getElementById('tournoiTitle').value = data.tournamentTitle || "";
+            document.getElementById('tournoiDesc').value = data.tournamentDesc || "";
+            document.getElementById('tournoiUrl').value = data.tournamentUrl || "";
+
+            document.getElementById('twitchUrl').value = data.twitchUrl || "";
+            document.getElementById('discordUrl').value = data.discordUrl || "";
+            document.getElementById('youtubeUrl').value = data.youtubeUrl || "";
+
+            document.getElementById('testModeActive').checked = data.isTestMode || false;
+            
+            const currentFirebaseVersion = data.latestAppVersionName || data.latestAppVersionCode || "1";
+            document.getElementById('currentFirebaseVersion').innerText = currentFirebaseVersion;
+            document.getElementById('updateVersion').value = currentFirebaseVersion;
+            document.getElementById('updateUrl').value = data.updateUrl || "";
+            document.getElementById('updateMessage').value = data.updateMessage || "";
+        });
+    }
+
+    document.getElementById('testModeActive').addEventListener('change', async function () {
+        const isActive = this.checked;
+        try {
+            await db.collection('app_state').doc('status').set({ isTestMode: isActive }, { merge: true });
+            showToast(isActive ? "Mode Test ACTIVÉ 🚧" : "Mode Test DÉSACTIVÉ ✅");
+        } catch (e) {
+            showToast("Erreur : " + e.message, true);
+            this.checked = !isActive;
+        }
+    });
+
+    window.saveLiveContent = async function () {
+        const state = parseInt(document.getElementById('liveState').value);
+        let updates = {
+            liveState: state,
+            liveTitle: document.getElementById('liveTitle').value,
+            liveDesc: document.getElementById('liveDesc').value,
+        };
+        
+        if (state === 1) {
+            updates.liveScheduledDate = parseDateFromInput(document.getElementById('liveScheduledDate').value);
+        } else {
+            updates.liveScheduledDate = firebase.firestore.FieldValue.delete();
+        }
+
+        try {
+            await db.collection('app_state').doc('status').set(updates, { merge: true });
+            showToast("Configuration Live sauvegardée ✅");
+        } catch (e) { showToast("Erreur : " + e.message, true); }
+    };
+
+    window.saveTournoiContent = async function () {
+        const state = parseInt(document.getElementById('tournoiState').value);
+        let updates = {
+            tournamentState: state,
+            tournamentTitle: document.getElementById('tournoiTitle').value,
+            tournamentDesc: document.getElementById('tournoiDesc').value,
+            tournamentUrl: document.getElementById('tournoiUrl').value,
+        };
+
+        if (state === 1 || state === 2) {
+            updates.tournamentStartDate = parseDateFromInput(document.getElementById('tournoiStartDate').value);
+        } else {
+            updates.tournamentStartDate = firebase.firestore.FieldValue.delete();
+        }
+
+        if (state === 1) {
+            updates.tournamentRegistrationEndDate = parseDateFromInput(document.getElementById('tournoiRegEndDate').value);
+        } else {
+            updates.tournamentRegistrationEndDate = firebase.firestore.FieldValue.delete();
+        }
+
+        try {
+            await db.collection('app_state').doc('status').set(updates, { merge: true });
+            showToast("Configuration Tournoi sauvegardée ✅");
+        } catch (e) { showToast("Erreur : " + e.message, true); }
+    };
+
+    window.saveSocialContent = async function () {
+        try {
+            await db.collection('app_state').doc('status').set({
+                twitchUrl: document.getElementById('twitchUrl').value,
+                discordUrl: document.getElementById('discordUrl').value,
+                youtubeUrl: document.getElementById('youtubeUrl').value,
+            }, { merge: true });
+            showToast("Réseaux sociaux mis à jour ✅");
+        } catch (e) { showToast("Erreur : " + e.message, true); }
+    };
+
+    window.saveUpdateContent = async function () {
+        try {
+            await db.collection('app_state').doc('status').set({
+                latestAppVersionName: document.getElementById('updateVersion').value,
+                updateUrl: document.getElementById('updateUrl').value,
+                updateMessage: document.getElementById('updateMessage').value,
+            }, { merge: true });
+            showToast("Alerte de mise à jour déployée ✅");
+        } catch (e) { showToast("Erreur : " + e.message, true); }
+    };
+
+    function loadArchives() {
+        db.collection('tournaments').orderBy('updatedAt', 'desc').onSnapshot(snap => {
+            const list = document.getElementById('archivesList');
+            if(!list) return;
+            if (snap.empty) {
+                list.innerHTML = "<div class='text-center text-muted mt-3 fs-5'>Aucun tournoi archivé.</div>";
+                return;
+            }
+            list.innerHTML = "";
+            snap.forEach(doc => {
+                const a = doc.data();
+                const replayUrl = a.replayUrl || "";
+                list.innerHTML += `
+                    <div class="list-group-item bg-dark text-white border-secondary d-flex justify-content-between align-items-center mb-2 rounded">
+                        <div>
+                            <h5 class="mb-1 text-warning">${a.title || 'Sans titre'}</h5>
+                            <small class="text-muted">ID: ${doc.id}</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn ${replayUrl ? 'btn-outline-info' : 'btn-outline-secondary'}" onclick="editReplay('${doc.id}', '${replayUrl.replace(/'/g, "\'")}')" title="Modifier le lien Replay YouTube">
+                                <i class="fab fa-youtube text-danger"></i> Replay
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteArchive('${doc.id}')" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    }
+
+    window.editReplay = function(id, currentUrl) {
+        const newUrl = prompt("Entrez le lien YouTube du replay pour ce tournoi :", currentUrl);
+        if(newUrl !== null) {
+            db.collection('tournaments').doc(id).update({ replayUrl: newUrl.trim() })
+                .then(() => showToast("Lien Replay mis à jour ! ✅"))
+                .catch(e => showToast("Erreur : " + e.message, true));
+        }
+    };
+
+    window.deleteArchive = function(id) {
+        if (confirm("Voulez-vous vraiment supprimer définitivement les données de ce tournoi ?")) {
+            db.collection('tournaments').doc(id).delete()
+                .then(() => showToast("Tournoi supprimé ✅"))
+                .catch(e => showToast("Erreur : " + e.message, true));
+        }
+    };
+
+    function loadAnnouncements() {
+        db.collection('announcements').orderBy('createdAt', 'desc').onSnapshot(snap => {
+            const list = document.getElementById('announcementsList');
+            announcementsData = {};
+            if (snap.empty) {
+                list.innerHTML = "<div class='text-center text-muted mt-5 fs-5'>Aucune annonce.</div>";
+                return;
+            }
+            list.innerHTML = "";
+            snap.forEach(doc => {
+                const a = doc.data();
+                announcementsData[doc.id] = a;
+                const dateText = a.createdAt ? new Date(a.createdAt.toDate()).toLocaleDateString('fr-FR') : 'À l\'instant';
+                list.innerHTML += `
+                    <div class="announcement-row d-flex justify-content-between align-items-start">
+                        <div class="pe-4 w-100">
+                            <h4 class="text-info mb-1">${a.title}</h4>
+                            <p class="small text-muted mb-2">Publiée le ${dateText}</p>
+                            <p class="text-light fs-5" style="white-space: pre-wrap;">${a.description}</p>
+                            ${a.linkUrl || a.actionUrl ? `<a href="${a.linkUrl || a.actionUrl}" target="_blank" class="btn btn-sm btn-outline-warning mt-2"><i class="fas fa-external-link-alt"></i> Tester le bouton</a>` : ''}
+                        </div>
+                        <div class="d-flex flex-column gap-2 ms-2">
+                            <button class="btn btn-primary btn-lg" onclick="editAnnouncement('${doc.id}')" title="Modifier"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-lg" onclick="deleteAnnouncement('${doc.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    }
+
+    window.editAnnouncement = function (id) {
+        editingAnnounceId = id;
+        const a = announcementsData[id];
+        document.getElementById('newAnnounceTitle').value = a.title;
+        document.getElementById('newAnnounceDesc').value = a.description;
+        document.getElementById('newAnnounceLinkText').value = a.linkText || "";
+        document.getElementById('newAnnounceUrl').value = a.actionUrl || a.linkUrl || "";
+        document.getElementById('formTitle').innerHTML = '<i class="fas fa-pen"></i> Modifier l\'annonce';
+        document.getElementById('formTitle').classList.replace('bg-primary', 'bg-success');
+        const btn = document.getElementById('btnSubmitAnnounce');
+        btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer les modifications';
+        btn.classList.replace('btn-primary', 'btn-success');
+        document.getElementById('btnCancelEdit').classList.remove('hidden');
+        window.scrollTo(0, 0);
+    };
+
+    window.cancelEdit = function () {
+        editingAnnounceId = null;
+        document.getElementById('newAnnounceTitle').value = "";
+        document.getElementById('newAnnounceDesc').value = "";
+        document.getElementById('newAnnounceLinkText').value = "";
+        document.getElementById('newAnnounceUrl').value = "";
+        document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Créer une annonce';
+        document.getElementById('formTitle').classList.replace('bg-success', 'bg-primary');
+        const btn = document.getElementById('btnSubmitAnnounce');
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Publier l\'annonce';
+        btn.classList.replace('btn-success', 'btn-primary');
+        document.getElementById('btnCancelEdit').classList.add('hidden');
+    };
+
+    window.submitAnnouncement = async function () {
+        const title = document.getElementById('newAnnounceTitle').value;
+        const desc = document.getElementById('newAnnounceDesc').value;
+        const linkText = document.getElementById('newAnnounceLinkText').value;
+        const url = document.getElementById('newAnnounceUrl').value;
+        if (!title || !desc) { showToast("Titre et description obligatoires.", true); return; }
+
+        try {
+            if (editingAnnounceId) {
+                await db.collection('announcements').doc(editingAnnounceId).update({ title, description: desc, linkText: linkText, actionUrl: url });
+                showToast("Annonce modifiée ✅");
+            } else {
+                await db.collection('announcements').add({
+                    title, description: desc, linkText: linkText, actionUrl: url,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast("Annonce publiée — notification envoyée ! 📢");
+            }
+            cancelEdit();
+        } catch (e) { showToast("Erreur : " + e.message, true); }
+    };
+
+    window.deleteAnnouncement = function (id) {
+        if (confirm("Attention, cette suppression est définitive. Confirmer ?")) {
+            db.collection('announcements').doc(id).delete();
+            if (editingAnnounceId === id) cancelEdit();
+        }
+    };
+</script>
+</body>
+</html>

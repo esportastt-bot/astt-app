@@ -1,0 +1,46 @@
+﻿{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "astt-e-sport",
+          "appId": "1:678391264155:android:642a175cb12ac0614de73e",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "astt-e-sport",
+          "configurations": {
+            "android": "1:678391264155:android:642a175cb12ac0614de73e",
+            "ios": "1:678391264155:ios:7229a9258220ef834de73e",
+            "macos": "1:678391264155:ios:7229a9258220ef834de73e",
+            "web": "1:678391264155:web:b0b4faa4233837034de73e",
+            "windows": "1:678391264155:web:575c80f798abb9294de73e"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "source": "functions"
+    }
+  ],
+  "hosting": {
+    "public": "public_apk",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

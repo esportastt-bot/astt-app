@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700;800&family=Montserrat:wght@500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: var(--background);
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            gap: 40px;
+        }
+        
+        /* Panneau de contrôle (Simulation Admin) */
+        .admin-controls {
+            background: #1a1d24;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #333;
+            color: white;
+            width: 250px;
+        }
+
+        .mobile-frame {
+            width: 375px;
+            height: 812px;
+            background-color: #0f1115;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 212, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(255, 140, 0, 0.15) 0%, transparent 40%),
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 20px 20px, 20px 20px;
+            border-radius: 40px;
+            border: 8px solid #1a1d24;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            color: #ffffff;
+        }
+
+        .title-font { font-family: 'Chakra Petch', sans-serif; }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .scrollable-content::-webkit-scrollbar { display: none; }
+        
+        .glow-text-blue { text-shadow: 0 0 10px rgba(0, 212, 255, 0.7); }
+
+        .pulse-border { animation: pulse-glow 2s infinite; }
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 212, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); }
+        }
+
+        #particles {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 250px;
+            z-index: 0; pointer-events: none;
+        }
+
+        /* Modal Menu Réseaux */
+        #social-modal {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            background: rgba(15, 17, 21, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            border-radius: 32px 32px 0 0;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50;
+        }
+        #social-modal.open {
+            transform: translateY(0);
+        }
+
+        /* Utils pour cacher/afficher dynamiquement */
+        .hidden-dynamic {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Panneau de contrôle pour tester la maquette -->
+    <div class="admin-controls">
+        <h3 class="title-font text-xl mb-4 text-[#00D4FF]">Tests Dynamiques</h3>
+        <p class="text-sm text-gray-400 mb-4">Simulez le comportement de l'application en activant ces boutons :</p>
+        
+        <div class="space-y-4">
+            <label class="flex items-center space-x-3 cursor-pointer">
+                <input type="checkbox" id="toggle-live" class="form-checkbox h-5 w-5 text-[#00D4FF] rounded bg-gray-800 border-gray-600">
+                <span class="font-bold">Lancer un Live Twitch</span>
+            </label>
+            
+            <label class="flex items-center space-x-3 cursor-pointer">
+                <input type="checkbox" id="toggle-tournament" class="form-checkbox h-5 w-5 text-[#FF8C00] rounded bg-gray-800 border-gray-600">
+                <span class="font-bold">Annoncer un Tournoi</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Application Mobile -->
+    <div class="mobile-frame">
+        <header class="relative pt-12 pb-4 px-6 text-center z-10 flex flex-col items-center">
+            <canvas id="particles"></canvas>
+            <div class="relative z-10 w-20 h-20 bg-black/40 rounded-full border border-white/10 p-2 flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(0,212,255,0.3)]">
+                <img src="file:///C:/Users/Shadow/.gemini/antigravity/brain/830285ae-90e3-4108-ba1d-8f70c8906b5a/.user_uploaded/media_1789675568064.png" alt="ASTT Logo" class="w-full h-full object-contain filter drop-shadow-lg">
+            </div>
+            <h1 class="title-font text-xl font-bold tracking-wider">ASTT <span class="text-[#00D4FF] glow-text-blue">E-SPORT</span></h1>
+        </header>
+
+        <div class="scrollable-content flex-1 overflow-y-auto px-5 pb-24 z-10 space-y-4" id="feed-container">
+            
+            <!-- MESSAGE DE BIENVENUE -->
+            <div class="text-center py-2 mb-2">
+                <h2 class="title-font text-lg font-bold text-gray-300">BIENVENUE SUR L'APP</h2>
+                <p class="text-xs text-gray-500">Toute l'actualité de la section e-sport.</p>
+            </div>
+
+            <!-- CARTE LIVE TWITCH (Cachée par défaut) -->
+            <div id="card-live" class="glass-card p-4 relative overflow-hidden pulse-border border-[#00D4FF]/30 hidden-dynamic order-first">
+                <div class="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-bl-lg title-font animate-pulse">EN DIRECT</div>
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 rounded-lg bg-[#9146FF] flex items-center justify-center text-white shrink-0">
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+                    </div>
+                    <div>
+                        <h2 class="title-font font-bold text-md text-white">WEBTV</h2>
+                        <p class="text-xs text-gray-400">On est en live, rejoignez-nous !</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARTE TOURNOI (Cachée par défaut) -->
+            <div id="card-tournament" class="glass-card p-4 relative border-[#FF8C00]/20 hidden-dynamic">
+                <div class="flex items-start justify-between mb-2">
+                    <span class="text-[10px] font-bold px-2 py-1 bg-[#FF8C00]/20 text-[#FF8C00] rounded title-font">TOURNOI</span>
+                </div>
+                <h3 class="font-bold text-white text-sm mb-1">Tournoi Débutant - Saison 1</h3>
+                <p class="text-xs text-gray-400 mb-3">Les inscriptions pour le prochain tournoi sont ouvertes. Les places sont limitées !</p>
+                <button class="w-full py-2 rounded-lg font-bold title-font text-xs uppercase tracking-wider text-white border border-[#FF8C00] bg-[#FF8C00]/10 hover:bg-[#FF8C00]/20">
+                    S'inscrire (HelloAsso)
+                </button>
+            </div>
+
+            <!-- ANNONCE CLASSIQUE (Toujours visible) -->
+            <div class="glass-card p-4">
+                <div class="flex items-start justify-between mb-2">
+                    <span class="text-[10px] font-bold px-2 py-1 bg-white/10 text-white rounded title-font">ANNONCE</span>
+                    <span class="text-[10px] text-gray-400">Il y a 2h</span>
+                </div>
+                <h3 class="font-bold text-white text-sm mb-1">Nouvelle organisation</h3>
+                <p class="text-xs text-gray-400">Le planning des entraînements de la semaine prochaine a été mis à jour. Pensez à vérifier vos créneaux.</p>
+            </div>
+
+            <!-- ANNONCE CLASSIQUE 2 (Toujours visible) -->
+            <div class="glass-card p-4 opacity-70">
+                <div class="flex items-start justify-between mb-2">
+                    <span class="text-[10px] font-bold px-2 py-1 bg-white/10 text-white rounded title-font">ANNONCE</span>
+                    <span class="text-[10px] text-gray-400">Il y a 3 jours</span>
+                </div>
+                <h3 class="font-bold text-white text-sm mb-1">Retour sur l'événement</h3>
+                <p class="text-xs text-gray-400">Merci à tous d'avoir participé à la rencontre de ce week-end, c'était génial !</p>
+            </div>
+        </div>
+
+        <!-- MODAL RÉSEAUX (Caché en bas) -->
+        <div id="social-modal" class="p-6 pb-24 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+            <div class="w-12 h-1.5 bg-gray-600 rounded-full mx-auto mb-6 opacity-50"></div>
+            <h3 class="title-font text-xl font-bold text-center mb-6">NOS RÉSEAUX</h3>
+            
+            <button class="w-full mb-4 flex items-center p-4 rounded-xl bg-[#5865F2]/20 border border-[#5865F2] hover:bg-[#5865F2]/40 transition">
+                <svg class="w-8 h-8 text-[#5865F2] mr-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>
+                <div class="text-left">
+                    <h4 class="font-bold text-white text-sm">Discord</h4>
+                    <span class="text-xs text-gray-400">Rejoindre la communauté</span>
+                </div>
+            </button>
+
+            <button class="w-full flex items-center p-4 rounded-xl bg-[#9146FF]/20 border border-[#9146FF] hover:bg-[#9146FF]/40 transition">
+                <svg class="w-8 h-8 text-[#9146FF] mr-4 fill-current" viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+                <div class="text-left">
+                    <h4 class="font-bold text-white text-sm">Twitch</h4>
+                    <span class="text-xs text-gray-400">Accéder à la chaîne</span>
+                </div>
+            </button>
+        </div>
+
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="absolute bottom-0 w-full h-[70px] bg-black/90 backdrop-blur-xl border-t border-white/10 flex justify-around items-center px-2 z-20 rounded-b-[32px]">
+            <!-- Tab Home -->
+            <button class="flex flex-col items-center text-[#00D4FF] flex-1" id="nav-home">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <span class="text-[9px] title-font font-bold">ACCUEIL</span>
+            </button>
+            
+            <!-- Tab Réseaux (Fusion Twitch/Discord avec logos) -->
+            <button class="flex flex-col items-center text-gray-400 hover:text-white transition flex-1" id="nav-social">
+                <div class="flex items-center space-x-1 mb-1">
+                    <!-- Icon Twitch petit -->
+                    <svg class="w-4 h-4 fill-current text-[#9146FF]" viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+                    <!-- Icon Discord petit -->
+                    <svg class="w-4 h-4 fill-current text-[#5865F2]" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>
+                </div>
+                <span class="text-[9px] title-font font-bold uppercase">Twitch / Discord</span>
+            </button>
+
+            <!-- Tab Staff (Admin) -->
+            <button class="flex flex-col items-center text-gray-400 hover:text-white transition flex-1">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span class="text-[9px] title-font font-bold">STAFF</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Scripts pour l'interactivité -->
+    <script>
+        // --- 1. Gestion des Toggles (Simulation Admin) ---
+        const toggleLive = document.getElementById('toggle-live');
+        const cardLive = document.getElementById('card-live');
+        
+        const toggleTournament = document.getElementById('toggle-tournament');
+        const cardTournament = document.getElementById('card-tournament');
+        
+        const feedContainer = document.getElementById('feed-container');
+
+        toggleLive.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                cardLive.classList.remove('hidden-dynamic');
+                // Force la carte Live tout en haut du flux
+                feedContainer.prepend(cardLive);
+            } else {
+                cardLive.classList.add('hidden-dynamic');
+            }
+        });
+
+        toggleTournament.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                cardTournament.classList.remove('hidden-dynamic');
+                // Si le live est actif, il reste en premier, sinon le tournoi est en haut
+                if (toggleLive.checked) {
+                    cardLive.insertAdjacentElement('afterend', cardTournament);
+                } else {
+                    feedContainer.prepend(cardTournament);
+                }
+            } else {
+                cardTournament.classList.add('hidden-dynamic');
+            }
+        });
+
+        // --- 2. Gestion du menu modal "Réseaux" ---
+        const navSocial = document.getElementById('nav-social');
+        const navHome = document.getElementById('nav-home');
+        const socialModal = document.getElementById('social-modal');
+
+        navSocial.addEventListener('click', () => {
+            socialModal.classList.add('open');
+            navSocial.classList.add('text-[#00D4FF]');
+            navSocial.classList.remove('text-gray-400');
+            navHome.classList.add('text-gray-400');
+            navHome.classList.remove('text-[#00D4FF]');
+        });
+
+        navHome.addEventListener('click', () => {
+            socialModal.classList.remove('open');
+            navHome.classList.add('text-[#00D4FF]');
+            navHome.classList.remove('text-gray-400');
+            navSocial.classList.add('text-gray-400');
+            navSocial.classList.remove('text-[#00D4FF]');
+        });
+
+
+        // --- 3. Animation des Constellations ---
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = canvas.offsetWidth;
+            height = canvas.height = canvas.offsetHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+                this.radius = Math.random() * 1.5;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > width) this.vx = -this.vx;
+                if (this.y < 0 || this.y > height) this.vy = -this.vy;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 212, 255, 0.4)';
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 35; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 45) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.15 - distance/300})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>

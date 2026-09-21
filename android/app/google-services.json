@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "678391264155",
+    "project_id": "astt-e-sport",
+    "storage_bucket": "astt-e-sport.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:678391264155:android:642a175cb12ac0614de73e",
+        "android_client_info": {
+          "package_name": "com.asttesport.application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmJC83QT8AQMV3wbSwL2GpAdXUQiu6OYw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
