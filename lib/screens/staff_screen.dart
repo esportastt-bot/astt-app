@@ -835,18 +835,8 @@ class _StaffScreenState extends State<StaffScreen> {
 
         final docs = snapshot.data?.docs ?? [];
         if (docs.isEmpty) {
-          return Center(
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.person_add),
-              label: const Text("Générer des utilisateurs de test"),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00D4FF), foregroundColor: Colors.black),
-              onPressed: () async {
-                final ref = FirebaseFirestore.instance.collection('users');
-                await ref.doc('test-user-1').set({'email': 'joueur1@gmail.com', 'isStaff': false, 'createdAt': FieldValue.serverTimestamp()});
-                await ref.doc('test-user-2').set({'email': 'admin@esport.fr', 'isStaff': true, 'createdAt': FieldValue.serverTimestamp()});
-                await ref.doc('test-user-3').set({'email': 'fan.de.lol@hotmail.com', 'isStaff': false, 'createdAt': FieldValue.serverTimestamp()});
-              },
-            ),
+          return const Center(
+            child: Text("Aucun compte trouvé.", style: TextStyle(color: Colors.grey)),
           );
         }
 
@@ -866,30 +856,58 @@ class _StaffScreenState extends State<StaffScreen> {
               child: ListTile(
                 title: Text(email, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 subtitle: Text(isStaff ? 'Staff / Admin' : 'Utilisateur', style: TextStyle(color: isStaff ? const Color(0xFF00D4FF) : Colors.grey)),
-                trailing: Switch(
-                  value: isStaff || email.toLowerCase() == 'airwolfex@gmail.com', // Toujours activé pour ce compte
-                  activeThumbColor: const Color(0xFF00D4FF),
-                  onChanged: email.toLowerCase() == 'airwolfex@gmail.com'
-                      ? null // Désactive le bouton (impossible de cliquer)
-                      : (val) async {
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Switch(
+                      value: isStaff || email.toLowerCase() == 'airwolfex@gmail.com',
+                      activeThumbColor: const Color(0xFF00D4FF),
+                      onChanged: email.toLowerCase() == 'airwolfex@gmail.com'
+                          ? null
+                          : (val) async {
+                              try {
+                                await doc.reference.set({'isStaff': val}, SetOptions(merge: true));
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                    content: Text('Droits mis à jour pour ' + email, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    backgroundColor: Colors.green,
+                                    duration: const Duration(seconds: 1),
+                                  ));
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                    content: Text('Erreur Firestore: ' + e.toString(), style: const TextStyle(color: Colors.white)),
+                                    backgroundColor: Colors.redAccent,
+                                  ));
+                                }
+                              }
+                            },
+                    ),
+                    if (email.toLowerCase() != 'airwolfex@gmail.com')
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                        onPressed: () async {
                           try {
-                            await doc.reference.set({'isStaff': val}, SetOptions(merge: true));
+                            await doc.reference.delete();
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text('Droits mis à jour pour ' + email, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                backgroundColor: Colors.green,
+                                content: Text('Compte supprimé: ' + email),
+                                backgroundColor: Colors.orange,
                                 duration: const Duration(seconds: 1),
                               ));
                             }
                           } catch (e) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text('Erreur Firestore: ' + e.toString(), style: const TextStyle(color: Colors.white)),
-                                backgroundColor: Colors.redAccent,
+                                content: Text('Erreur suppression: ' + e.toString()),
+                                backgroundColor: Colors.red,
                               ));
                             }
                           }
                         },
+                      ),
+                  ],
                 ),
               ),
             );
