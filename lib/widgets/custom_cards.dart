@@ -33,7 +33,7 @@ class GlassCard extends StatelessWidget {
           child: Container(
             padding: padding,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.03),
+              color: Colors.white.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: borderColor),
               boxShadow: boxShadow,
@@ -104,7 +104,7 @@ class _LiveCardState extends State<LiveCard> with SingleTickerProviderStateMixin
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: const Color(0xFF00D4FF).withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                        decoration: BoxDecoration(color: const Color(0xFF00D4FF).withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
                         child: Text('EN DIRECT', style: GoogleFonts.chakraPetch(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF00D4FF))),
                       ),
                     ],
@@ -135,10 +135,10 @@ class _LiveCardState extends State<LiveCard> with SingleTickerProviderStateMixin
           onTap: () => _showFullEventInfo(context),
           borderRadius: BorderRadius.circular(16),
           child: GlassCard(
-            borderColor: const Color(0xFF00D4FF).withOpacity(0.3),
+            borderColor: const Color(0xFF00D4FF).withValues(alpha: 0.3),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF00D4FF).withOpacity(_glowAnimation.value / 20),
+                color: const Color(0xFF00D4FF).withValues(alpha: _glowAnimation.value / 20),
                 blurRadius: _glowAnimation.value,
                 spreadRadius: _glowAnimation.value / 2,
               )
@@ -348,7 +348,7 @@ class TournamentCard extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: const Color(0xFFFF8C00).withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                        decoration: BoxDecoration(color: const Color(0xFFFF8C00).withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
                         child: Text('TOURNOI', style: GoogleFonts.chakraPetch(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFFF8C00))),
                       ),
                     ],
@@ -378,7 +378,7 @@ class TournamentCard extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: const BorderSide(color: Color(0xFFFF8C00)),
-                        backgroundColor: const Color(0xFFFF8C00).withOpacity(0.1),
+                        backgroundColor: const Color(0xFFFF8C00).withValues(alpha: 0.1),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
@@ -400,7 +400,7 @@ class TournamentCard extends StatelessWidget {
       onTap: () => _showFullEventInfo(context),
       borderRadius: BorderRadius.circular(16),
       child: GlassCard(
-        borderColor: const Color(0xFFFF8C00).withOpacity(0.2),
+        borderColor: const Color(0xFFFF8C00).withValues(alpha: 0.2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -409,7 +409,7 @@ class TournamentCard extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: const Color(0xFFFF8C00).withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                  decoration: BoxDecoration(color: const Color(0xFFFF8C00).withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
                   child: Text('INSCRIPTIONS TOURNOI', style: GoogleFonts.chakraPetch(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFFF8C00))),
                 ),
                 if (registrationEndDate != null)
@@ -437,7 +437,7 @@ class TournamentCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Center(
-              child: Text("Cliquez pour plus d'infos et s'inscrire", style: TextStyle(fontSize: 10, color: const Color(0xFFFF8C00).withOpacity(0.8), fontStyle: FontStyle.italic)),
+              child: Text("Cliquez pour plus d'infos et s'inscrire", style: TextStyle(fontSize: 10, color: const Color(0xFFFF8C00).withValues(alpha: 0.8), fontStyle: FontStyle.italic)),
             ),
           ],
         ),
@@ -507,7 +507,7 @@ class ScheduledEventCard extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: color.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                        decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
                         child: Text(type, style: GoogleFonts.chakraPetch(fontSize: 10, fontWeight: FontWeight.bold, color: color)),
                       ),
                     ],
@@ -530,8 +530,8 @@ class ScheduledEventCard extends StatelessWidget {
                       icon: Icon(Icons.calendar_month, color: color),
                       label: Text('AJOUTER AU CALENDRIER', style: GoogleFonts.chakraPetch(fontWeight: FontWeight.bold, color: color)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: color.withOpacity(0.1),
-                        side: BorderSide(color: color.withOpacity(0.5)),
+                        backgroundColor: color.withValues(alpha: 0.1),
+                        side: BorderSide(color: color.withValues(alpha: 0.5)),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
@@ -554,7 +554,7 @@ class ScheduledEventCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: GlassCard(
           padding: const EdgeInsets.all(10),
-          borderColor: color.withOpacity(0.3),
+          borderColor: color.withValues(alpha: 0.3),
           child: Column(
             children: [
               Row(
@@ -586,9 +586,9 @@ class ScheduledEventCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: color.withOpacity(0.5)),
+                    border: Border.all(color: color.withValues(alpha: 0.5)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -686,7 +686,7 @@ class AnnouncementCard extends StatelessWidget {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.1),
+                          backgroundColor: Colors.white.withValues(alpha: 0.1),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -1,276 +1,4 @@
-﻿<!DOCTYPE html>
-<html lang="fr" data-bs-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <title>ASTT E-Sport | Dashboard Admin</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <style>
-        body { background-color: #121212; color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .card { background-color: #1e1e1e; border: 1px solid #333; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .card-header { background-color: #2a2a2a; border-bottom: 1px solid #333; font-weight: bold; font-size: 1.2rem; }
-        .hidden { display: none !important; }
-        .announcement-row { border-bottom: 1px solid #333; padding: 15px 0; }
-        .btn-astt { background-color: #00d4ff; color: #000; font-weight: bold; }
-        .btn-astt:hover { background-color: #00b3d6; color: #000; }
-        .nav-tabs .nav-link { color: #aaa; font-size: 1.1rem; padding: 15px 25px; }
-        .nav-tabs .nav-link.active { background-color: #1e1e1e; color: #00d4ff; border-color: #333 #333 #1e1e1e; font-weight: bold; }
-        .nav-tabs { border-bottom: 1px solid #333; }
-        label { font-size: 1.1rem; margin-bottom: 8px; font-weight: 500; color: #ccc; }
-        textarea, input, select { resize: vertical; }
 
-        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-</head>
-<body>
-
-<nav class="navbar navbar-dark bg-dark border-bottom border-secondary mb-4 py-3">
-    <div class="container">
-        <span class="navbar-brand mb-0 h1 fs-3"><i class="fas fa-gamepad text-info"></i> ASTT E-Sport | Espace Staff</span>
-        <button id="btnLogout" class="btn btn-outline-danger btn-lg hidden"><i class="fas fa-sign-out-alt"></i> DÃ©connexion</button>
-    </div>
-</nav>
-
-<!-- Toast de confirmation -->
-<div class="toast-container">
-    <div id="saveToast" class="toast align-items-center text-bg-success border-0" role="alert">
-        <div class="d-flex">
-            <div class="toast-body fs-5"><i class="fas fa-check-circle me-2"></i><span id="toastMsg">SauvegardÃ© !</span></div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    </div>
-</div>
-
-<div class="container pb-5">
-    <div id="loginSection" class="row justify-content-center mt-5">
-        <div class="col-md-6">
-            <div class="card shadow-lg">
-                <div class="card-header text-center py-3 fs-4">Connexion requise</div>
-                <div class="card-body p-4">
-                    <form id="loginForm">
-                        <div class="mb-4">
-                            <label>Adresse Email</label>
-                            <input type="email" id="emailInput" class="form-control form-control-lg bg-dark text-white" required>
-                        </div>
-                        <div class="mb-4">
-                            <label>Mot de passe</label>
-                            <input type="password" id="passwordInput" class="form-control form-control-lg bg-dark text-white" required>
-                        </div>
-                        <button type="submit" class="btn btn-astt btn-lg w-100 py-3">Se connecter</button>
-                    </form>
-                    <div id="loginError" class="alert alert-danger mt-4 hidden fs-5"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="dashboardSection" class="hidden">
-        <ul class="nav nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#live" type="button"><i class="fas fa-video text-info"></i> WebTV (Live)</button></li>
-            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tournoi" type="button"><i class="fas fa-trophy text-warning"></i> Tournois</button></li>
-            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#annonces" type="button"><i class="fas fa-newspaper text-success"></i> Annonces</button></li>
-            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#divers" type="button"><i class="fas fa-cogs text-secondary"></i> Divers</button></li>
-            <li class="nav-item" role="presentation"><button class="nav-link" id="tab-codes" data-bs-toggle="tab" data-bs-target="#codes_admin" type="button"><i class="fas fa-key text-primary"></i> Codes</button></li>
-          </ul>
-
-        <div class="tab-content" id="myTabContent">
-
-            <!-- ONGLET CODES -->
-            <div class="tab-pane fade" id="codes_admin">
-                <div class="card p-2">
-                    <div class="card-header bg-dark text-primary"><i class="fas fa-key"></i> Distribution de Codes</div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label><i class="fas fa-file-excel text-success"></i> Fichier HelloAsso (Extract)</label>
-                                <input type="file" id="helloAssoFile" class="form-control bg-dark text-white border-secondary" accept=".xlsx, .xls">
-                                <small class="text-muted">Colonne I = E-mail / Colonne M = Tarif</small>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label><i class="fas fa-file-excel text-success"></i> Fichier Codes</label>
-                                <input type="file" id="codesFile" class="form-control bg-dark text-white border-secondary" accept=".xlsx, .xls">
-                                <small class="text-muted">Colonne B = Code / Colonne G = Date limite</small>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <button class="btn btn-primary btn-lg" onclick="generateDistribution()"><i class="fas fa-cogs"></i> Distribution Automatique</button>
-                        </div>
-                        
-                        <div id="distributionPreview" class="mt-4 hidden">
-                            <h4 class="text-info">PrÃ©visualisation de la distribution</h4>
-                            <div class="table-responsive">
-                                <table class="table table-dark table-striped table-bordered mt-2">
-                                    <thead>
-                                        <tr>
-                                            <th>E-mail de destination</th>
-                                            <th>Code Ã  attribuer</th>
-                                            <th>Date limite</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="distributionTableBody">
-                                        <!-- GÃ©nÃ©rÃ© dynamiquement -->
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="mt-3 text-end">
-                                <button class="btn btn-success btn-lg" onclick="saveDistributionToFirebase()"><i class="fas fa-cloud-upload-alt"></i> Envoyer vers l'application (Firebase)</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-    
-
-            <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ONGLET LIVE â•â•â• -->
-            <div class="tab-pane fade show active" id="live">
-                <div class="card p-2">
-                    <div class="card-body">
-                        
-                        <div class="mb-4">
-                            <label><i class="fas fa-satellite-dish"></i> Statut du Live</label>
-                            <select id="liveState" class="form-select form-select-lg bg-dark text-white" onchange="toggleLiveDates()">
-                                <option value="0">Inactif</option>
-                                <option value="1">ProgrammÃ©</option>
-                                <option value="2">En Direct</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-4 hidden" id="liveScheduledDateContainer">
-                            <label><i class="far fa-calendar-alt"></i> Date et heure prÃ©vue</label>
-                            <input type="datetime-local" id="liveScheduledDate" class="form-control form-control-lg bg-dark text-white">
-                        </div>
-
-                        <hr class="border-secondary my-4">
-
-                        <div class="mb-4"><label><i class="fas fa-heading"></i> Titre de la tuile Live</label><input type="text" id="liveTitle" class="form-control form-control-lg bg-dark text-white" placeholder="ex: WebTV - Tournoi FIFA"></div>
-                        <div class="mb-5"><label><i class="fas fa-align-left"></i> Description dÃ©taillÃ©e</label><textarea id="liveDesc" class="form-control form-control-lg bg-dark text-white" rows="4"></textarea></div>
-                        
-                        <button class="btn btn-success btn-lg w-100 py-3 fs-5" onclick="saveLiveContent()"><i class="fas fa-save"></i> Enregistrer et Publier (Live)</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ONGLET TOURNOI â•â•â• -->
-            <div class="tab-pane fade" id="tournoi">
-                <div class="card p-2">
-                    <div class="card-body">
-
-                        <div class="mb-4">
-                            <label><i class="fas fa-tasks"></i> Statut du Tournoi</label>
-                            <select id="tournoiState" class="form-select form-select-lg bg-dark text-white" onchange="toggleTournoiDates()">
-                                <option value="0">Inactif</option>
-                                <option value="1">Inscriptions Ouvertes</option>
-                                <option value="2">Ã‰vÃ©nement Ã  venir</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-4 hidden" id="tournoiRegDateContainer">
-                            <label><i class="far fa-clock"></i> Date de fin des inscriptions</label>
-                            <input type="datetime-local" id="tournoiRegEndDate" class="form-control form-control-lg bg-dark text-white">
-                        </div>
-
-                        <div class="mb-4 hidden" id="tournoiStartDateContainer">
-                            <label><i class="far fa-calendar-check"></i> Date de dÃ©but de l'Ã©vÃ©nement</label>
-                            <input type="datetime-local" id="tournoiStartDate" class="form-control form-control-lg bg-dark text-white">
-                        </div>
-
-                        <hr class="border-secondary my-4">
-
-                        <div class="mb-4"><label><i class="fas fa-heading"></i> Titre du Tournoi</label><input type="text" id="tournoiTitle" class="form-control form-control-lg bg-dark text-white"></div>
-                        <div class="mb-4"><label><i class="fas fa-align-left"></i> Informations (Prix, dates, rÃ¨gles...)</label><textarea id="tournoiDesc" class="form-control form-control-lg bg-dark text-white" rows="4"></textarea></div>
-                        <div class="mb-5"><label><i class="fas fa-link"></i> URL d'inscription</label><input type="text" id="tournoiUrl" class="form-control form-control-lg bg-dark text-white"></div>
-                        
-                        <button class="btn btn-success btn-lg w-100 py-3 fs-5" onclick="saveTournoiContent()"><i class="fas fa-save"></i> Enregistrer et Publier (Tournoi)</button>
-                    </div>
-                </div>
-
-                <div class="card p-2 mt-4">
-                    <div class="card-header bg-dark text-warning border-secondary fs-5"><i class="fas fa-archive"></i> Archives des Tournois (SynchronisÃ©s)</div>
-                    <div class="card-body bg-dark">
-                        <div id="archivesList" class="list-group">
-                            <div class="text-center text-muted py-3">Chargement...</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ONGLET ANNONCES â•â•â• -->
-            <div class="tab-pane fade" id="annonces">
-                <div class="row mt-4">
-                    <div class="col-lg-5">
-                        <div class="card mt-0">
-                            <div class="card-header bg-primary text-white" id="formTitle"><i class="fas fa-plus-circle"></i> CrÃ©er une annonce</div>
-                            <div class="card-body">
-                                <div class="mb-4"><label>Titre de l'annonce</label><input type="text" id="newAnnounceTitle" class="form-control form-control-lg bg-dark text-white"></div>
-                                <div class="mb-4"><label>Contenu de l'annonce</label><textarea id="newAnnounceDesc" class="form-control form-control-lg bg-dark text-white" rows="6"></textarea></div>
-                                <div class="mb-4"><label>Texte du bouton (Optionnel)</label><input type="text" id="newAnnounceLinkText" class="form-control form-control-lg bg-dark text-white" placeholder="ex: EN SAVOIR PLUS"></div>
-                                <div class="mb-4"><label>URL du bouton (Optionnel)</label><input type="text" id="newAnnounceUrl" class="form-control form-control-lg bg-dark text-white" placeholder="ex: https://..."></div>
-                                <button id="btnSubmitAnnounce" class="btn btn-primary btn-lg w-100 py-3 mb-2" onclick="submitAnnouncement()"><i class="fas fa-paper-plane"></i> Publier l'annonce</button>
-                                <button id="btnCancelEdit" class="btn btn-outline-secondary w-100 hidden" onclick="cancelEdit()">Annuler la modification</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-7">
-                        <div class="card mt-0 h-100">
-                            <div class="card-header"><i class="fas fa-list"></i> Annonces en ligne</div>
-                            <div class="card-body overflow-auto" style="max-height: 700px;">
-                                <div id="announcementsList"><div class="text-center text-muted mt-5 fs-5">Chargement...</div></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ONGLET DIVERS â•â•â• -->
-            <div class="tab-pane fade" id="divers">
-                <div class="card p-2 mb-4">
-                    <div class="card-body">
-                        <h4 class="mb-4"><i class="fas fa-link"></i> RÃ©seaux Sociaux</h4>
-                        <div class="mb-4"><label><i class="fab fa-twitch text-info"></i> URL de la chaÃ®ne Twitch</label><input type="text" id="twitchUrl" class="form-control form-control-lg bg-dark text-white"></div>
-                        <div class="mb-4"><label><i class="fab fa-discord text-primary"></i> URL d'invitation Discord</label><input type="text" id="discordUrl" class="form-control form-control-lg bg-dark text-white" placeholder="https://discord.gg/..."></div>
-                        <div class="mb-4"><label><i class="fab fa-youtube text-danger"></i> URL de la chaÃ®ne YouTube</label><input type="text" id="youtubeUrl" class="form-control form-control-lg bg-dark text-white" placeholder="https://youtube.com/..."></div>
-                        <button class="btn btn-info w-100 py-2 fs-5 text-dark fw-bold" onclick="saveSocialContent()"><i class="fas fa-save"></i> Sauvegarder les liens</button>
-                    </div>
-                </div>
-
-                <div class="card p-2 mb-4">
-                    <div class="card-body">
-                        <h4 class="mb-4"><i class="fas fa-mobile-alt text-danger"></i> Mise Ã  jour de l'app</h4>
-                        <div class="alert alert-danger fs-6 mb-4"><i class="fas fa-exclamation-triangle"></i> Forcer une mise Ã  jour chez tous les utilisateurs.</div>
-                        <p class="text-warning mb-4">Version exigÃ©e en base de donnÃ©es : <strong id="currentFirebaseVersion" class="text-white fs-5">Chargement...</strong></p>
-                        <div class="row mb-4">
-                            <div class="col-md-3"><label>Version cible</label><input type="text" id="updateVersion" class="form-control form-control-lg bg-dark text-white" placeholder="ex: 1.06"></div>
-                            <div class="col-md-9"><label>Lien de l'APK</label><input type="text" id="updateUrl" class="form-control form-control-lg bg-dark text-white"></div>
-                        </div>
-                        <div class="mb-4"><label>Message affichÃ©</label><textarea id="updateMessage" class="form-control form-control-lg bg-dark text-white" rows="2"></textarea></div>
-                        <button class="btn btn-danger w-100 py-2 fs-5" onclick="saveUpdateContent()"><i class="fas fa-rocket"></i> DÃ©ployer l'Alerte</button>
-                    </div>
-                </div>
-
-                <div class="card p-2">
-                    <div class="card-body">
-                        <h4 class="mb-4 text-warning"><i class="fas fa-bug"></i> DÃ©bogage & Notifications</h4>
-                        <div class="form-check form-switch fs-5 mb-2">
-                            <input class="form-check-input" type="checkbox" id="testModeActive" style="transform: scale(1.5); margin-right: 12px; cursor: pointer;">
-                            <label class="form-check-label text-white" for="testModeActive">
-                                <strong>Mode Test</strong> (Coupe l'envoi des notifications via le serveur)
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<script>
     const firebaseConfig = {
         apiKey: "AIzaSyDFE6P0GHVGcC5VBjwg32eyZrhLp1JmKBg",
         authDomain: "astt-e-sport.firebaseapp.com",
@@ -733,14 +461,27 @@
         if(!confirm("Êtes-vous sûr de vouloir envoyer ces " + generatedAssignments.length + " codes vers la base de données ? Les utilisateurs concernés les verront apparaître dans leur application.")) return;
         
         try {
-            const codesRef = db.collection('distributed_codes');
+            const usersRef = db.collection('users');
             let successCount = 0;
             
             for(let item of generatedAssignments) {
                 if(!item.email || !item.code) continue;
                 
-                await codesRef.add({
-                    email: item.email.toLowerCase(),
+                let targetUid = null;
+                let q = await usersRef.where('email', '==', item.email).get();
+                if(!q.empty) {
+                    targetUid = q.docs[0].id;
+                } else {
+                    let newDoc = usersRef.doc();
+                    await newDoc.set({
+                        email: item.email,
+                        isStaff: false,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    targetUid = newDoc.id;
+                }
+                
+                await usersRef.doc(targetUid).collection('codes').add({
                     code: item.code,
                     game: "Jeu (Date limite: " + item.dateLimite + ")",
                     isUsed: false,
@@ -759,6 +500,3 @@
         }
     }
 
-</script>
-</body>
-</html>

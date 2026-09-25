@@ -40,8 +40,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const MainLayout(),
-          transitionsBuilder: (_, animation, __, child) {
+          pageBuilder: (_, _, _) => const MainLayout(),
+          transitionsBuilder: (_, animation, _, child) {
             return FadeTransition(opacity: animation, child: child);
           },
           transitionDuration: const Duration(milliseconds: 800), // Fondu doux

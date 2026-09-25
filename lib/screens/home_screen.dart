@@ -4,11 +4,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../state/app_state.dart';
 import '../widgets/floating_embers.dart';
 import '../widgets/logo_constellation.dart';
 import '../widgets/custom_cards.dart';
+import 'auth_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final GlobalKey? bellKey;
@@ -136,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -147,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFF00D4FF),
+            activeThumbColor: const Color(0xFF00D4FF),
           ),
         ],
       ),
@@ -172,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
               center: const Alignment(-0.8, -0.6),
               radius: 0.8,
               colors: [
-                const Color(0xFF00D4FF).withOpacity(0.15),
+                const Color(0xFF00D4FF).withValues(alpha: 0.15),
                 Colors.transparent,
               ],
               stops: const [0.0, 0.7],
@@ -186,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
               center: const Alignment(0.8, 0.6),
               radius: 0.8,
               colors: [
-                const Color(0xFFFF8C00).withOpacity(0.15),
+                const Color(0xFFFF8C00).withValues(alpha: 0.15),
                 Colors.transparent,
               ],
               stops: const [0.0, 0.7],
@@ -214,6 +216,60 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
+                        IconButton(
+                          icon: Icon(Icons.person_outline, color: appState.currentUser != null ? Colors.green : Colors.grey),
+                          onPressed: () {
+                            if (appState.currentUser == null) {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const AuthScreen()));
+                            } else {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: const Color(0xFF1E1E1E),
+                                  title: Text("Mon Compte", style: GoogleFonts.chakraPetch(color: Colors.white, fontWeight: FontWeight.bold)),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(appState.currentUser!.email ?? "", style: const TextStyle(color: Colors.white70, fontSize: 16)),
+                                      const SizedBox(height: 24),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton(
+                                          onPressed: () async {
+                                            try {
+                                              await FirebaseAuth.instance.sendPasswordResetEmail(email: appState.currentUser!.email!);
+                                              if (!ctx.mounted) return;
+                                              Navigator.pop(ctx);
+                                              if (!context.mounted) return;
+                                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email de réinitialisation envoyé !')));
+                                            } catch (e) {
+                                              if (!context.mounted) return;
+                                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+                                            }
+                                          },
+                                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00D4FF), foregroundColor: Colors.black),
+                                          child: Text("CHANGER MDP", style: GoogleFonts.chakraPetch(fontWeight: FontWeight.bold)),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            appState.logout();
+                                            Navigator.pop(ctx);
+                                          },
+                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+                                          child: Text("DÉCONNECTER", style: GoogleFonts.chakraPetch(fontWeight: FontWeight.bold)),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                        ),
                         IconButton(
                           key: widget.bellKey,
                           icon: const Icon(Icons.notifications_active_outlined, color: Colors.white70),
@@ -320,7 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         padding: const EdgeInsets.only(bottom: 16.0),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.redAccent.withOpacity(0.2),
+                            color: Colors.redAccent.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: Colors.redAccent),
                           ),
@@ -429,7 +485,7 @@ class GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.03)
+      ..color = Colors.white.withValues(alpha: 0.03)
       ..strokeWidth = 1.0;
 
     const double spacing = 20.0;

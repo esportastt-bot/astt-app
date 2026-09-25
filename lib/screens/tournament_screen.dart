@@ -104,9 +104,9 @@ class _TournamentScreenState extends State<TournamentScreen> with SingleTickerPr
                                 icon: Icon(Icons.play_circle_fill, size: 16, color: hasReplay ? Colors.white : Colors.white38),
                                 label: Text(hasReplay ? 'REVOIR LE CAST (YOUTUBE)' : 'REPLAY INDISPONIBLE'),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: hasReplay ? const Color(0xFFFF0000) : Colors.grey.withOpacity(0.2),
+                                  backgroundColor: hasReplay ? const Color(0xFFFF0000) : Colors.grey.withValues(alpha: 0.2),
                                   foregroundColor: hasReplay ? Colors.white : Colors.white38,
-                                  disabledBackgroundColor: Colors.grey.withOpacity(0.1),
+                                  disabledBackgroundColor: Colors.grey.withValues(alpha: 0.1),
                                   disabledForegroundColor: Colors.white38,
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                   minimumSize: const Size(0, 36),
@@ -191,7 +191,7 @@ class _TournamentScreenState extends State<TournamentScreen> with SingleTickerPr
         final teamMatches = matches.where((m) => m['teamAId'] == team['id'] || m['teamBId'] == team['id']).toList();
 
         return Card(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           margin: const EdgeInsets.only(bottom: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
@@ -250,8 +250,8 @@ class _TournamentScreenState extends State<TournamentScreen> with SingleTickerPr
                   final oppWins = isA ? (m['winsB'] ?? 0) : (m['winsA'] ?? 0);
                   
                   Color resultColor = Colors.grey;
-                  if (myWins > oppWins) resultColor = Colors.green;
-                  else if (myWins < oppWins) resultColor = Colors.redAccent;
+                  if (myWins > oppWins) { resultColor = Colors.green; }
+                  else if (myWins < oppWins) { resultColor = Colors.redAccent; }
                   
                   final maps = List<dynamic>.from(m['maps'] ?? []);
 
@@ -259,7 +259,7 @@ class _TournamentScreenState extends State<TournamentScreen> with SingleTickerPr
                     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(8),
                       border: Border(left: BorderSide(color: resultColor, width: 3)),
                     ),
@@ -289,11 +289,11 @@ class _TournamentScreenState extends State<TournamentScreen> with SingleTickerPr
                                 ],
                               ),
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   );
-                }).toList(),
+                }),
                 const SizedBox(height: 12),
               ],
             ),
@@ -307,9 +307,9 @@ class _TournamentScreenState extends State<TournamentScreen> with SingleTickerPr
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text('$label: $value', style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.bold)),
     );
@@ -339,7 +339,7 @@ class _TournamentScreenState extends State<TournamentScreen> with SingleTickerPr
         final maps = List<dynamic>.from(match['maps'] ?? []);
 
         return Card(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           margin: const EdgeInsets.only(bottom: 12),
           child: Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -357,7 +357,7 @@ class _TournamentScreenState extends State<TournamentScreen> with SingleTickerPr
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text('$winsA - $winsB', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF00D4FF))),
@@ -405,7 +405,7 @@ class _TournamentScreenState extends State<TournamentScreen> with SingleTickerPr
                       ],
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),

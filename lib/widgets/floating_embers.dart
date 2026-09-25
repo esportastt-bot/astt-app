@@ -118,8 +118,8 @@ class EmbersPainter extends CustomPainter {
       double currentOpacity = ember.maxOpacity * Curves.easeOut.transform(progress);
 
       paint.color = ember.isOrange 
-          ? const Color(0xFFFF8C00).withOpacity(currentOpacity)
-          : const Color(0xFF00D4FF).withOpacity(currentOpacity);
+          ? const Color(0xFFFF8C00).withValues(alpha: currentOpacity)
+          : const Color(0xFF00D4FF).withValues(alpha: currentOpacity);
       
       canvas.drawCircle(Offset(ember.x, ember.y), ember.size, paint);
     }

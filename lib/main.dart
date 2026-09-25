@@ -13,6 +13,7 @@ import 'screens/home_screen.dart';
 import 'screens/staff_screen.dart';
 import 'screens/tournament_screen.dart'; // Nouvel import
 import 'services/notification_service.dart'; // Nouvel import
+import 'screens/codes_screen.dart';
 
 import 'screens/splash_screen.dart'; // Nouvel import
 
@@ -166,7 +167,9 @@ class _MainLayoutState extends State<MainLayout> {
         opacityShadow: 0.9,
         onClickTarget: (target) => tutorialCoachMark.next(),
         onFinish: () => _showTutorialPart2(),
-      )..show(context: context);
+      );
+      if (!mounted) return;
+      tutorialCoachMark.show(context: context);
     });
   }
 
@@ -202,7 +205,9 @@ class _MainLayoutState extends State<MainLayout> {
         opacityShadow: 0.9,
         onClickTarget: (target) => tutorialCoachMark.next(),
         onFinish: () => _showTutorialPart3(),
-      )..show(context: context);
+      );
+      if (!mounted) return;
+      tutorialCoachMark.show(context: context);
     });
   }
 
@@ -254,7 +259,9 @@ class _MainLayoutState extends State<MainLayout> {
         opacityShadow: 0.9,
         onClickTarget: (target) => tutorialCoachMark.next(),
         onFinish: () => appState.endTutorial(),
-      )..show(context: context);
+      );
+      if (!mounted) return;
+      tutorialCoachMark.show(context: context);
     });
   }
 
@@ -336,7 +343,7 @@ class _MainLayoutState extends State<MainLayout> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF5865F2).withOpacity(0.15),
+                          color: const Color(0xFF5865F2).withValues(alpha: 0.15),
                           border: Border.all(color: const Color(0xFF5865F2)),
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -374,7 +381,7 @@ class _MainLayoutState extends State<MainLayout> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF9146FF).withOpacity(0.15),
+                          color: const Color(0xFF9146FF).withValues(alpha: 0.15),
                           border: Border.all(color: const Color(0xFF9146FF)),
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -412,7 +419,7 @@ class _MainLayoutState extends State<MainLayout> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFF0000).withOpacity(0.15),
+                          color: const Color(0xFFFF0000).withValues(alpha: 0.15),
                           border: Border.all(color: const Color(0xFFFF0000)),
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -448,26 +455,30 @@ class _MainLayoutState extends State<MainLayout> {
     final isActive = isSelected && index != 1;
     final color = isActive ? const Color(0xFF00D4FF) : Colors.grey;
 
-    return GestureDetector(
-      key: key,
-      onTap: () => _onItemTapped(index),
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(isActive ? activeIcon : icon, color: color, size: 24),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: GoogleFonts.chakraPetch(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: color,
+    return Expanded(
+      child: GestureDetector(
+        key: key,
+        onTap: () => _onItemTapped(index),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), // Moins de padding forcé
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(isActive ? activeIcon : icon, color: color, size: 24),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis, // Empêche le texte de déborder
+                style: GoogleFonts.chakraPetch(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -476,13 +487,14 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
-    final bool showStaff = appState.isAdminUnlocked;
+    final bool showStaff = appState.isAdminUnlocked || appState.isStaff;
 
     final List<Widget> pages = [
       HomeScreen(bellKey: _bellKey, liveKey: _liveKey, tournamentKey: _tournamentKey, logoKey: _logoKey),
       const SizedBox(), // Remplacé par le modal Réseaux
       const TournamentScreen(), // Nouveau tab Tournois
-      if (showStaff) const StaffScreen(),
+      const CodesScreen(),
+      const StaffScreen(),
     ];
 
     return Scaffold(
@@ -494,7 +506,7 @@ class _MainLayoutState extends State<MainLayout> {
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.8),
+              color: Colors.black.withValues(alpha: 0.8),
               border: const Border(top: BorderSide(color: Colors.white10, width: 1)),
             ),
             child: SafeArea(
@@ -504,7 +516,8 @@ class _MainLayoutState extends State<MainLayout> {
                   _buildNavItem(0, Icons.home_outlined, Icons.home, 'ACCUEIL', _homeTabKey),
                   _buildNavItem(1, Icons.people_alt_outlined, Icons.people_alt, 'COMMUNAUTÉ', _socialTabKey),
                   _buildNavItem(2, Icons.emoji_events_outlined, Icons.emoji_events, 'TOURNOIS', _tournamentTabKey),
-                  if (showStaff) _buildNavItem(3, Icons.admin_panel_settings_outlined, Icons.admin_panel_settings, 'STAFF', null),
+                  if (appState.currentUser != null) _buildNavItem(3, Icons.qr_code_outlined, Icons.qr_code, 'CODES', null),
+                  if (showStaff) _buildNavItem(4, Icons.admin_panel_settings_outlined, Icons.admin_panel_settings, 'STAFF', null),
                 ],
               ),
             ),

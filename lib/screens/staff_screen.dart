@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -116,10 +115,10 @@ class _StaffScreenState extends State<StaffScreen> {
       isScrollControlled: true,
       backgroundColor: const Color(0xFF1E2129),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) {
+      builder: (modalContext) {
         return Padding(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            bottom: MediaQuery.of(modalContext).viewInsets.bottom + 20,
             left: 24, right: 24, top: 24,
           ),
           child: SingleChildScrollView(
@@ -131,14 +130,14 @@ class _StaffScreenState extends State<StaffScreen> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: _announceTitleController,
-                  decoration: InputDecoration(labelText: 'Titre', filled: true, fillColor: Colors.white.withOpacity(0.05), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                  decoration: InputDecoration(labelText: 'Titre', filled: true, fillColor: Colors.white.withValues(alpha: 0.05), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _announceDescController,
                   minLines: 3,
                   maxLines: null,
-                  decoration: InputDecoration(labelText: 'Description', filled: true, fillColor: Colors.white.withOpacity(0.05), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                  decoration: InputDecoration(labelText: 'Description', filled: true, fillColor: Colors.white.withValues(alpha: 0.05), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -146,7 +145,7 @@ class _StaffScreenState extends State<StaffScreen> {
                     Expanded(
                       child: TextField(
                         controller: _announceLinkTextController,
-                        decoration: InputDecoration(labelText: 'Texte Bouton', filled: true, fillColor: Colors.white.withOpacity(0.05), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                        decoration: InputDecoration(labelText: 'Texte Bouton', filled: true, fillColor: Colors.white.withValues(alpha: 0.05), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -154,7 +153,7 @@ class _StaffScreenState extends State<StaffScreen> {
                       flex: 2,
                       child: TextField(
                         controller: _announceLinkUrlController,
-                        decoration: InputDecoration(labelText: 'URL Bouton', filled: true, fillColor: Colors.white.withOpacity(0.05), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                        decoration: InputDecoration(labelText: 'URL Bouton', filled: true, fillColor: Colors.white.withValues(alpha: 0.05), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
                       ),
                     ),
                   ],
@@ -170,7 +169,7 @@ class _StaffScreenState extends State<StaffScreen> {
                       final linkUrl = _announceLinkUrlController.text.trim();
                       
                       if (title.isEmpty || description.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Titre et description requis.')));
+                        ScaffoldMessenger.of(modalContext).showSnackBar(const SnackBar(content: Text('Titre et description requis.')));
                         return;
                       }
 
@@ -189,9 +188,11 @@ class _StaffScreenState extends State<StaffScreen> {
                             'linkUrl': linkUrl.isNotEmpty ? linkUrl : FieldValue.delete(),
                           });
                         }
-                        if (mounted) Navigator.pop(context);
+                        if (modalContext.mounted) { Navigator.pop(modalContext); }
                       } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+                        if (modalContext.mounted) {
+                          ScaffoldMessenger.of(modalContext).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+                        }
                       }
                     },
                     style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00D4FF), foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
@@ -232,12 +233,12 @@ class _StaffScreenState extends State<StaffScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime(2101),
     );
-    if (pickedDate != null && mounted) {
+    if (pickedDate != null && context.mounted) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(initialDate ?? DateTime.now()),
       );
-      if (pickedTime != null && mounted) {
+      if (pickedTime != null && context.mounted) {
         onDateSelected(DateTime(
           pickedDate.year, pickedDate.month, pickedDate.day,
           pickedTime.hour, pickedTime.minute,
@@ -278,7 +279,7 @@ class _StaffScreenState extends State<StaffScreen> {
 
     return SafeArea(
       child: DefaultTabController(
-        length: 4,
+        length: 5,
         child: Column(
           children: [
             Padding(
@@ -305,6 +306,7 @@ class _StaffScreenState extends State<StaffScreen> {
                 Tab(icon: Icon(Icons.emoji_events), text: 'TOURNOI'),
                 Tab(icon: Icon(Icons.announcement), text: 'ANNONCES'),
                 Tab(icon: Icon(Icons.settings), text: 'DIVERS'),
+                Tab(icon: Icon(Icons.people), text: 'COMPTES'),
               ],
             ),
             Expanded(
@@ -314,6 +316,7 @@ class _StaffScreenState extends State<StaffScreen> {
                   _buildTournamentTab(appState),
                   _buildAnnouncementsTab(),
                   _buildSettingsTab(appState),
+                  _buildUsersTab(),
                 ],
               ),
             ),
@@ -335,9 +338,9 @@ class _StaffScreenState extends State<StaffScreen> {
             const SizedBox(height: 8),
             const Text('Authentifiez-vous pour administrer l\'application.', style: TextStyle(color: Colors.grey, fontSize: 12)),
             const SizedBox(height: 32),
-            TextField(controller: _emailController, decoration: InputDecoration(labelText: 'Email', filled: true, fillColor: Colors.white.withOpacity(0.05), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))), keyboardType: TextInputType.emailAddress),
+            TextField(controller: _emailController, decoration: InputDecoration(labelText: 'Email', filled: true, fillColor: Colors.white.withValues(alpha: 0.05), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))), keyboardType: TextInputType.emailAddress),
             const SizedBox(height: 16),
-            TextField(controller: _passwordController, decoration: InputDecoration(labelText: 'Mot de passe', filled: true, fillColor: Colors.white.withOpacity(0.05), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))), obscureText: true),
+            TextField(controller: _passwordController, decoration: InputDecoration(labelText: 'Mot de passe', filled: true, fillColor: Colors.white.withValues(alpha: 0.05), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))), obscureText: true),
             const SizedBox(height: 24),
             if (_errorMessage != null) Padding(padding: const EdgeInsets.only(bottom: 16.0), child: Text(_errorMessage!, style: const TextStyle(color: Colors.redAccent))),
             SizedBox(
@@ -362,16 +365,16 @@ class _StaffScreenState extends State<StaffScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white10)),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white10)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('Gestion du Live', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
-                  value: _liveState,
+                  initialValue: _liveState,
                   dropdownColor: const Color(0xFF1E2129),
-                  decoration: InputDecoration(labelText: 'Statut du Live', filled: true, fillColor: Colors.black.withOpacity(0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
+                  decoration: InputDecoration(labelText: 'Statut du Live', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
                   items: const [
                     DropdownMenuItem(value: 0, child: Text('Inactif')),
                     DropdownMenuItem(value: 1, child: Text('Programmé')),
@@ -393,7 +396,7 @@ class _StaffScreenState extends State<StaffScreen> {
                 const Divider(color: Colors.white10, height: 24),
                 TextField(
                   controller: _liveTitleController,
-                  decoration: InputDecoration(labelText: 'Titre de la tuile', filled: true, fillColor: Colors.black.withOpacity(0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
+                  decoration: InputDecoration(labelText: 'Titre de la tuile', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
                   style: const TextStyle(fontSize: 12),
                 ),
                 const SizedBox(height: 8),
@@ -401,7 +404,7 @@ class _StaffScreenState extends State<StaffScreen> {
                   controller: _liveDescController,
                   minLines: 3,
                   maxLines: null,
-                  decoration: InputDecoration(labelText: 'Description', filled: true, fillColor: Colors.black.withOpacity(0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
+                  decoration: InputDecoration(labelText: 'Description', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
                   style: const TextStyle(fontSize: 12),
                 ),
                 const SizedBox(height: 12),
@@ -439,16 +442,16 @@ class _StaffScreenState extends State<StaffScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white10)),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white10)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('Gestion du Tournoi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
-                  value: _tournamentState,
+                  initialValue: _tournamentState,
                   dropdownColor: const Color(0xFF1E2129),
-                  decoration: InputDecoration(labelText: 'Statut du Tournoi', filled: true, fillColor: Colors.black.withOpacity(0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
+                  decoration: InputDecoration(labelText: 'Statut du Tournoi', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
                   items: const [
                     DropdownMenuItem(value: 0, child: Text('Inactif')),
                     DropdownMenuItem(value: 1, child: Text('Inscriptions Ouvertes')),
@@ -479,7 +482,7 @@ class _StaffScreenState extends State<StaffScreen> {
                 const Divider(color: Colors.white10, height: 24),
                 TextField(
                   controller: _tournamentTitleController,
-                  decoration: InputDecoration(labelText: 'Titre du Tournoi', filled: true, fillColor: Colors.black.withOpacity(0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
+                  decoration: InputDecoration(labelText: 'Titre du Tournoi', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
                   style: const TextStyle(fontSize: 12),
                 ),
                 const SizedBox(height: 8),
@@ -487,13 +490,13 @@ class _StaffScreenState extends State<StaffScreen> {
                   controller: _tournamentDescController,
                   minLines: 3,
                   maxLines: null,
-                  decoration: InputDecoration(labelText: 'Infos, Prix, Dates...', filled: true, fillColor: Colors.black.withOpacity(0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
+                  decoration: InputDecoration(labelText: 'Infos, Prix, Dates...', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
                   style: const TextStyle(fontSize: 12),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _tournamentUrlController,
-                  decoration: InputDecoration(labelText: 'Lien du tournoi (ex: HelloAsso)', filled: true, fillColor: Colors.black.withOpacity(0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
+                  decoration: InputDecoration(labelText: 'Lien du tournoi (ex: HelloAsso)', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
                   style: const TextStyle(fontSize: 12),
                 ),
                 const SizedBox(height: 8),
@@ -524,7 +527,7 @@ class _StaffScreenState extends State<StaffScreen> {
           Text('ARCHIVES DES TOURNOIS', style: GoogleFonts.chakraPetch(fontWeight: FontWeight.bold, color: Colors.grey)),
           const SizedBox(height: 8),
           Container(
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance.collection('tournaments').orderBy('updatedAt', descending: true).snapshots(),
               builder: (context, snapshot) {
@@ -536,7 +539,7 @@ class _StaffScreenState extends State<StaffScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: docs.length,
-                  separatorBuilder: (_, __) => const Divider(color: Colors.white10, height: 1),
+                  separatorBuilder: (_, _) => const Divider(color: Colors.white10, height: 1),
                   itemBuilder: (context, index) {
                     final doc = docs[index];
                     final data = doc.data() as Map<String, dynamic>;
@@ -560,7 +563,7 @@ class _StaffScreenState extends State<StaffScreen> {
                                     decoration: InputDecoration(
                                       hintText: 'https://youtube.com/...',
                                       filled: true,
-                                      fillColor: Colors.black.withOpacity(0.2),
+                                      fillColor: Colors.black.withValues(alpha: 0.2),
                                     ),
                                     style: const TextStyle(color: Colors.white),
                                   ),
@@ -587,7 +590,7 @@ class _StaffScreenState extends State<StaffScreen> {
                             builder: (context) => AlertDialog(
                               backgroundColor: const Color(0xFF1E2129),
                               title: Text('Supprimer ?', style: GoogleFonts.chakraPetch(color: Colors.white)),
-                              content: Text('Supprimer définitivement "${data['title']}" ?', style: const TextStyle(color: Colors.white70)),
+                              content: Text('Supprimer dÃ©finitivement "${data['title']}" ?', style: const TextStyle(color: Colors.white70)),
                               actions: [
                                 TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('ANNULER', style: TextStyle(color: Colors.grey))),
                                 ElevatedButton(
@@ -638,7 +641,7 @@ class _StaffScreenState extends State<StaffScreen> {
                 final doc = docs[index];
                 final data = doc.data() as Map<String, dynamic>;
                 return Card(
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(12),
@@ -650,7 +653,7 @@ class _StaffScreenState extends State<StaffScreen> {
                         Text(data['description'] ?? '', style: const TextStyle(color: Colors.white70)),
                         if (data['linkText'] != null) ...[
                           const SizedBox(height: 8),
-                          Text('🔗 ${data['linkText']}', style: const TextStyle(color: Color(0xFF00D4FF), fontSize: 12)),
+                          Text('ðŸ”— ${data['linkText']}', style: const TextStyle(color: Color(0xFF00D4FF), fontSize: 12)),
                         ]
                       ],
                     ),
@@ -703,24 +706,24 @@ class _StaffScreenState extends State<StaffScreen> {
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
             child: Column(
               children: [
                 TextField(
                   controller: _twitchUrlController,
-                  decoration: InputDecoration(labelText: 'Lien de la chaîne Twitch', filled: true, fillColor: Colors.black.withOpacity(0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
+                  decoration: InputDecoration(labelText: 'Lien de la chaîne Twitch', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
                   style: const TextStyle(fontSize: 12),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _discordUrlController,
-                  decoration: InputDecoration(labelText: 'Lien d\'invitation Discord', filled: true, fillColor: Colors.black.withOpacity(0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
+                  decoration: InputDecoration(labelText: 'Lien d\'invitation Discord', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
                   style: const TextStyle(fontSize: 12),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _youtubeUrlController,
-                  decoration: InputDecoration(labelText: 'Lien de la chaîne YouTube', filled: true, fillColor: Colors.black.withOpacity(0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
+                  decoration: InputDecoration(labelText: 'Lien de la chaîne YouTube', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
                   style: const TextStyle(fontSize: 12),
                 ),
                 const SizedBox(height: 12),
@@ -746,7 +749,7 @@ class _StaffScreenState extends State<StaffScreen> {
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -754,14 +757,14 @@ class _StaffScreenState extends State<StaffScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: _updateVersionController,
-                  decoration: InputDecoration(labelText: 'Dernière Version Requise (ex: 1.06)', filled: true, fillColor: Colors.black.withOpacity(0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
+                  decoration: InputDecoration(labelText: 'Dernière Version Requise (ex: 1.06)', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
                   keyboardType: TextInputType.text,
                   style: const TextStyle(fontSize: 12),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _updateUrlController,
-                  decoration: InputDecoration(labelText: 'URL de l\'APK', filled: true, fillColor: Colors.black.withOpacity(0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
+                  decoration: InputDecoration(labelText: 'URL de l\'APK', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
                   style: const TextStyle(fontSize: 12),
                 ),
                 const SizedBox(height: 8),
@@ -769,7 +772,7 @@ class _StaffScreenState extends State<StaffScreen> {
                   controller: _updateMessageController,
                   minLines: 3,
                   maxLines: null,
-                  decoration: InputDecoration(labelText: 'Message de nouveautés', filled: true, fillColor: Colors.black.withOpacity(0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
+                  decoration: InputDecoration(labelText: 'Message de nouveautés', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
                   style: const TextStyle(fontSize: 12),
                 ),
                 const SizedBox(height: 12),
@@ -795,7 +798,7 @@ class _StaffScreenState extends State<StaffScreen> {
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -812,7 +815,7 @@ class _StaffScreenState extends State<StaffScreen> {
                     appState.setTestMode(val);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(val ? 'Mode Test ACTIVÉ' : 'Mode Test DÉSACTIVÉ'), backgroundColor: val ? Colors.orange : Colors.green));
                   }, 
-                  activeColor: Colors.orange
+                  activeThumbColor: Colors.orange,
                 ),
               ],
             ),
@@ -822,4 +825,79 @@ class _StaffScreenState extends State<StaffScreen> {
       ),
     );
   }
+
+  Widget _buildUsersTab() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').orderBy('createdAt', descending: true).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+        if (snapshot.hasError) return Center(child: Text('Erreur: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
+
+        final docs = snapshot.data?.docs ?? [];
+        if (docs.isEmpty) {
+          return Center(
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.person_add),
+              label: const Text("Générer des utilisateurs de test"),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00D4FF), foregroundColor: Colors.black),
+              onPressed: () async {
+                final ref = FirebaseFirestore.instance.collection('users');
+                await ref.doc('test-user-1').set({'email': 'joueur1@gmail.com', 'isStaff': false, 'createdAt': FieldValue.serverTimestamp()});
+                await ref.doc('test-user-2').set({'email': 'admin@esport.fr', 'isStaff': true, 'createdAt': FieldValue.serverTimestamp()});
+                await ref.doc('test-user-3').set({'email': 'fan.de.lol@hotmail.com', 'isStaff': false, 'createdAt': FieldValue.serverTimestamp()});
+              },
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16.0),
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
+            final doc = docs[index];
+            final data = doc.data() as Map<String, dynamic>;
+            final email = data['email'] ?? 'Sans email';
+            final isStaff = data['isStaff'] ?? false;
+
+            return Card(
+              color: const Color(0xFF1E1E1E),
+              margin: const EdgeInsets.only(bottom: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: ListTile(
+                title: Text(email, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                subtitle: Text(isStaff ? 'Staff / Admin' : 'Utilisateur', style: TextStyle(color: isStaff ? const Color(0xFF00D4FF) : Colors.grey)),
+                trailing: Switch(
+                  value: isStaff || email.toLowerCase() == 'airwolfex@gmail.com', // Toujours activé pour ce compte
+                  activeThumbColor: const Color(0xFF00D4FF),
+                  onChanged: email.toLowerCase() == 'airwolfex@gmail.com'
+                      ? null // Désactive le bouton (impossible de cliquer)
+                      : (val) async {
+                          try {
+                            await doc.reference.set({'isStaff': val}, SetOptions(merge: true));
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text('Droits mis à jour pour ' + email, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                backgroundColor: Colors.green,
+                                duration: const Duration(seconds: 1),
+                              ));
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text('Erreur Firestore: ' + e.toString(), style: const TextStyle(color: Colors.white)),
+                                backgroundColor: Colors.redAccent,
+                              ));
+                            }
+                          }
+                        },
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
 }
+

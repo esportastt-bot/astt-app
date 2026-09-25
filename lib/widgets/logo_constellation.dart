@@ -149,7 +149,7 @@ class Shield3DPainter extends CustomPainter {
 
           final grad = ui.Gradient.linear(
             p1.offset, p2.offset,
-            [p1.color.withOpacity(finalAlpha), p2.color.withOpacity(finalAlpha)]
+            [p1.color.withValues(alpha: finalAlpha), p2.color.withValues(alpha: finalAlpha)]
           );
           
           final linePaint = Paint()
@@ -167,12 +167,12 @@ class Shield3DPainter extends CustomPainter {
       double size = 1.5 + ((p.z + 1) / 2) * 1.5;
 
       final paint = Paint()
-        ..color = p.color.withOpacity(alpha * 0.8)
+        ..color = p.color.withValues(alpha: alpha * 0.8)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
       
       canvas.drawCircle(p.offset, size * 1.5, paint);
       
-      canvas.drawCircle(p.offset, size * 0.5, Paint()..color = Colors.white.withOpacity(alpha));
+      canvas.drawCircle(p.offset, size * 0.5, Paint()..color = Colors.white.withValues(alpha: alpha));
     }
   }
 

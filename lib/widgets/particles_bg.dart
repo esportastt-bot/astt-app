@@ -65,7 +65,7 @@ class ParticlePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final particlePaint = Paint()..color = const Color(0xFF00D4FF).withOpacity(0.4);
+    final particlePaint = Paint()..color = const Color(0xFF00D4FF).withValues(alpha: 0.4);
     
     for (int i = 0; i < particles.length; i++) {
       final p = particles[i];
@@ -85,7 +85,7 @@ class ParticlePainter extends CustomPainter {
 
         if (distance < 50) {
           final linePaint = Paint()
-            ..color = Colors.white.withOpacity(max(0, 0.2 - distance / 250))
+            ..color = Colors.white.withValues(alpha: max(0, 0.2 - distance / 250))
             ..strokeWidth = 0.5;
           canvas.drawLine(Offset(p.x, p.y), Offset(p2.x, p2.y), linePaint);
         }
