@@ -277,6 +277,56 @@ class _StaffScreenState extends State<StaffScreen> {
       return _buildLoginScreen();
     }
 
+    // Utilisateur connecté mais sans droits staff → accès refusé
+    if (!appState.isStaff && !appState.isAdminUnlocked) {
+      return SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.block, size: 72, color: Colors.redAccent),
+                const SizedBox(height: 24),
+                Text(
+                  'ACCÈS REFUSÉ',
+                  style: GoogleFonts.chakraPetch(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Votre compte (${appState.currentUser!.email}) n\'a pas les droits staff nécessaires pour accéder à cette section.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => appState.logout(),
+                    icon: const Icon(Icons.logout, color: Colors.redAccent),
+                    label: Text(
+                      'SE DÉCONNECTER',
+                      style: GoogleFonts.chakraPetch(fontWeight: FontWeight.bold, color: Colors.redAccent),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.redAccent),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return SafeArea(
       child: DefaultTabController(
         length: 5,
@@ -869,7 +919,7 @@ class _StaffScreenState extends State<StaffScreen> {
                                 await doc.reference.set({'isStaff': val}, SetOptions(merge: true));
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                    content: Text('Droits mis à jour pour ' + email, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    content: Text('Droits mis à jour pour $email', style: const TextStyle(fontWeight: FontWeight.bold)),
                                     backgroundColor: Colors.green,
                                     duration: const Duration(seconds: 1),
                                   ));
@@ -877,7 +927,7 @@ class _StaffScreenState extends State<StaffScreen> {
                               } catch (e) {
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                    content: Text('Erreur Firestore: ' + e.toString(), style: const TextStyle(color: Colors.white)),
+                                    content: Text('Erreur Firestore: $e', style: const TextStyle(color: Colors.white)),
                                     backgroundColor: Colors.redAccent,
                                   ));
                                 }
@@ -892,7 +942,7 @@ class _StaffScreenState extends State<StaffScreen> {
                             await doc.reference.delete();
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text('Compte supprimé: ' + email),
+                                content: Text('Compte supprimé: $email'),
                                 backgroundColor: Colors.orange,
                                 duration: const Duration(seconds: 1),
                               ));
@@ -900,7 +950,7 @@ class _StaffScreenState extends State<StaffScreen> {
                           } catch (e) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text('Erreur suppression: ' + e.toString()),
+                                content: Text('Erreur suppression: $e'),
                                 backgroundColor: Colors.red,
                               ));
                             }

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../state/app_state.dart';
+import 'auth_screen.dart';
 
 class CodesScreen extends StatefulWidget {
   const CodesScreen({super.key});
@@ -19,7 +20,51 @@ class _CodesScreenState extends State<CodesScreen> {
     final user = appState.currentUser;
 
     if (user == null) {
-      return const Scaffold(body: Center(child: Text("Non connectÃ©")));
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.lock_outline, size: 72, color: Color(0xFF00D4FF)),
+                const SizedBox(height: 24),
+                Text(
+                  'ACCÈS RÉSERVÉ',
+                  style: GoogleFonts.chakraPetch(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Connectez-vous avec l\'adresse e-mail utilisée lors de votre inscription sur HelloAsso pour accéder à vos codes.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const AuthScreen()));
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00D4FF),
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text('SE CONNECTER / S\'INSCRIRE', style: GoogleFonts.chakraPetch(fontWeight: FontWeight.bold, fontSize: 15)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
     return Scaffold(
