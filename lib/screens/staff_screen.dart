@@ -278,7 +278,7 @@ class _StaffScreenState extends State<StaffScreen> {
     }
 
     // Utilisateur connecté mais sans droits staff → accès refusé
-    if (!appState.isStaff && !appState.isAdminUnlocked) {
+    if (!appState.isStaff) {
       return SafeArea(
         child: Center(
           child: Padding(

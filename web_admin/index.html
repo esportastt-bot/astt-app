@@ -328,28 +328,58 @@
         }
     }
 
-    auth.onAuthStateChanged(user => {
+    // ── Vérification isStaff + affichage dashboard ──────────────────────────
+    auth.onAuthStateChanged(async user => {
         if (user) {
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('dashboardSection').classList.remove('hidden');
-            document.getElementById('btnLogout').classList.remove('hidden');
-            loadStatus();
-            loadAnnouncements();
-            loadArchives();
+            // Vérifier le statut staff dans Firestore avant d'afficher quoi que ce soit
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                const isStaff = userDoc.exists && userDoc.data().isStaff === true;
+
+                if (!isStaff) {
+                    // Pas staff → déconnexion immédiate + message d'erreur
+                    await auth.signOut();
+                    const errEl = document.getElementById('loginError');
+                    errEl.innerText = `⛔ Accès refusé. Le compte "${user.email}" n'a pas les droits staff.`;
+                    errEl.classList.remove('hidden');
+                    document.getElementById('loginSection').classList.remove('hidden');
+                    document.getElementById('dashboardSection').classList.add('hidden');
+                    document.getElementById('btnLogout').classList.add('hidden');
+                    return;
+                }
+
+                // Staff confirmé → afficher le dashboard
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('dashboardSection').classList.remove('hidden');
+                document.getElementById('btnLogout').classList.remove('hidden');
+                loadStatus();
+                loadAnnouncements();
+                loadArchives();
+
+            } catch (e) {
+                // Erreur Firestore lors de la vérification → déconnexion par sécurité
+                console.error("Erreur vérification staff :", e);
+                await auth.signOut();
+                const errEl = document.getElementById('loginError');
+                errEl.innerText = "Erreur lors de la vérification des droits : " + e.message;
+                errEl.classList.remove('hidden');
+            }
         } else {
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
             document.getElementById('btnLogout').classList.add('hidden');
+            document.getElementById('loginError').classList.add('hidden');
         }
     });
 
     document.getElementById('loginForm').addEventListener('submit', e => {
         e.preventDefault();
+        document.getElementById('loginError').classList.add('hidden');
         auth.signInWithEmailAndPassword(
             document.getElementById('emailInput').value,
             document.getElementById('passwordInput').value
         ).catch(() => {
-            document.getElementById('loginError').innerText = "Erreur de connexion. VÃ©rifiez vos identifiants.";
+            document.getElementById('loginError').innerText = "Erreur de connexion. Vérifiez vos identifiants.";
             document.getElementById('loginError').classList.remove('hidden');
         });
     });

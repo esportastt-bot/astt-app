@@ -1,0 +1,117 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────
+    //  Helpers
+    // ─────────────────────────────────────────────
+
+    // Vérifie que l'utilisateur est authentifié
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    // Récupère le document utilisateur depuis Firestore
+    function getUserDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // Vérifie si l'utilisateur a le statut staff
+    function isStaff() {
+      return isLoggedIn() &&
+             getUserDoc().data.isStaff == true;
+    }
+
+    // ─────────────────────────────────────────────
+    //  app_state — état global de l'application
+    //  • Lecture : tout le monde (y compris non-connectés)
+    //  • Écriture : staff uniquement
+    // ─────────────────────────────────────────────
+    match /app_state/{docId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // ─────────────────────────────────────────────
+    //  announcements — annonces publiques
+    //  • Lecture : tout le monde
+    //  • Écriture : staff uniquement
+    // ─────────────────────────────────────────────
+    match /announcements/{docId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // ─────────────────────────────────────────────
+    //  tournaments — archives de tournois
+    //  • Lecture : tout le monde
+    //  • Écriture : staff uniquement
+    // ─────────────────────────────────────────────
+    match /tournaments/{docId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // ─────────────────────────────────────────────
+    //  users — profils des utilisateurs
+    //  • Un utilisateur peut lire/créer son propre profil
+    //  • Un utilisateur NE PEUT PAS modifier isStaff sur son propre profil
+    //  • Staff peut lire et modifier tous les profils (pour toggle isStaff)
+    // ─────────────────────────────────────────────
+    match /users/{userId} {
+      // Lecture : l'utilisateur lui-même OU staff
+      allow read: if isLoggedIn() &&
+                     (request.auth.uid == userId || isStaff());
+
+      // Création : l'utilisateur crée son propre profil
+      // (isStaff ne peut pas être défini à true à la création)
+      allow create: if isLoggedIn() &&
+                       request.auth.uid == userId &&
+                       request.resource.data.isStaff == false;
+
+      // Mise à jour :
+      // - Staff peut tout modifier
+      // - Un utilisateur normal peut modifier son propre profil
+      //   MAIS ne peut pas changer isStaff
+      allow update: if isLoggedIn() && (
+        isStaff() ||
+        (
+          request.auth.uid == userId &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isStaff'])
+        )
+      );
+
+      // Suppression : staff uniquement
+      allow delete: if isStaff();
+    }
+
+    // ─────────────────────────────────────────────
+    //  distributed_codes — codes de jeux distribués
+    //  • Lecture : utilisateur connecté qui possède ce code (email == user.email)
+    //              OU staff (pour voir tous les codes depuis l'admin)
+    //  • Mise à jour (isUsed) : utilisateur qui possède ce code uniquement
+    //              (le staff NE PEUT PAS modifier les codes des autres)
+    //  • Suppression : utilisateur qui possède ce code uniquement
+    //  • Création : staff uniquement (distribution des codes)
+    // ─────────────────────────────────────────────
+    match /distributed_codes/{codeId} {
+      // Lecture : uniquement le propriétaire du code (via email), même pour le staff
+      // (toLowerCase est utilisé dans l'app)
+      allow read: if isLoggedIn() && resource.data.email == request.auth.token.email.lower();
+
+      // Création : staff uniquement
+      allow create: if isStaff();
+
+      // Mise à jour : uniquement le propriétaire du code
+      // (le staff n'a PAS le droit de modifier les codes des membres)
+      allow update: if isLoggedIn() &&
+                       resource.data.email == request.auth.token.email.lower();
+
+      // Suppression : uniquement le propriétaire du code
+      allow delete: if isLoggedIn() &&
+                       resource.data.email == request.auth.token.email.lower();
+    }
+
+  }
+}

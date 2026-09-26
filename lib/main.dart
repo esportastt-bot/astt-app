@@ -487,7 +487,7 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
-    final bool showStaff = appState.isAdminUnlocked || appState.isStaff;
+    final bool showStaff = appState.isStaff;
 
     final List<Widget> pages = [
       HomeScreen(bellKey: _bellKey, liveKey: _liveKey, tournamentKey: _tournamentKey, logoKey: _logoKey),
