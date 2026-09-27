@@ -1,11 +1,7 @@
-import 'dart:io';
-
-import 'package:android_intent_plus/android_intent.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../firebase_options.dart';
 
@@ -112,50 +108,9 @@ class NotificationService {
       }
     });
 
-    // 5. ✅ FIX ZTE / Android 12 : demander l'exemption de la batterie
-    // Les constructeurs comme ZTE, Xiaomi, Huawei appliquent une optimisation
-    // agressive qui tue les services FCM en arrière-plan. Cette popup système
-    // demande à l'utilisateur d'exclure l'app de la gestion batterie,
-    // garantissant la réception des notifications même app fermée.
-    await _requestBatteryOptimizationExemption();
-
-    // 6. Log du token FCM (utile pour tester depuis la console Firebase)
+    // 5. Log du token FCM (utile pour tester depuis la console Firebase)
     final token = await _messaging.getToken();
     debugPrint('📱 FCM Token: $token');
   }
 
-  /// Demande l'exemption de la batterie sur Android (une seule fois).
-  /// Sans cette exemption, les constructeurs ZTE, Xiaomi, Huawei, etc.
-  /// peuvent tuer le service FCM et bloquer les notifications.
-  static Future<void> _requestBatteryOptimizationExemption() async {
-    if (!Platform.isAndroid) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final alreadyRequested = prefs.getBool('battery_opt_requested') ?? false;
-
-    if (alreadyRequested) {
-      debugPrint('🔋 Exemption batterie : déjà demandée précédemment.');
-      return;
-    }
-
-    debugPrint('🔋 Demande d\'exemption de la batterie pour Android...');
-
-    try {
-      const intent = AndroidIntent(
-        action: 'android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
-        // Package de l'application — doit correspondre à l'applicationId
-        data: 'package:com.asttesport.application',
-      );
-      await intent.launch();
-
-      // Marquer comme demandé pour ne plus afficher la popup au prochain lancement
-      await prefs.setBool('battery_opt_requested', true);
-      debugPrint('✅ Popup d\'exemption batterie affichée.');
-    } catch (e) {
-      // Certains appareils ou émulateurs ne supportent pas cet intent.
-      // On ignore l'erreur silencieusement.
-      debugPrint('⚠️ Exemption batterie impossible sur cet appareil : $e');
-      await prefs.setBool('battery_opt_requested', true);
-    }
-  }
 }

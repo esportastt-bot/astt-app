@@ -24,6 +24,7 @@ class AppState extends ChangeNotifier {
   String tournamentTitle = "Tournoi Débutant - Saison 1";
   String tournamentDesc = "Les inscriptions pour le prochain tournoi sont ouvertes. Les places sont limitées !";
   String discordUrl = "https://discord.gg/votre_lien_ici";
+  String shareAppUrl = "";
 
   bool isTestMode = false;
   String currentAppVersionName = "Chargement...";
@@ -38,7 +39,7 @@ class AppState extends ChangeNotifier {
 
   User? currentUser;
   bool isStaff = false;
-  bool isAdminUnlocked = false; // gardÃ© pour rÃ©trocompatibilitÃ© si besoin
+  bool isAdminUnlocked = false; // gardé pour rétrocompatibilité si besoin
 
   bool notifyAnnouncements = true;
   bool notifyLiveAnnounced = true;
@@ -97,12 +98,20 @@ class AppState extends ChangeNotifier {
     _startVisibilityTimer();
   }
 
+  Timer? _visibilityTimer;
+
   void _startVisibilityTimer() {
-    Timer.periodic(const Duration(minutes: 1), (timer) {
+    _visibilityTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
       if (liveScheduledDate != null || tournamentStartDate != null) {
         notifyListeners();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _visibilityTimer?.cancel();
+    super.dispose();
   }
 
   void refreshUI() => notifyListeners();
@@ -178,12 +187,12 @@ class AppState extends ChangeNotifier {
     isTutorialMode = false; tutorialShowLive = false; tutorialShowTournament = false; notifyListeners();
   }
 
-  Future<void> setSocialUrls(String newTwitchUrl, String newDiscordUrl, String newYoutubeUrl) async {
+  Future<void> setSocialUrls(String newTwitchUrl, String newDiscordUrl, String newYoutubeUrl, String newShareAppUrl) async {
     try {
       await FirebaseFirestore.instance.collection('app_state').doc('status').set({
-        'twitchUrl': newTwitchUrl, 'discordUrl': newDiscordUrl, 'youtubeUrl': newYoutubeUrl,
+        'twitchUrl': newTwitchUrl, 'discordUrl': newDiscordUrl, 'youtubeUrl': newYoutubeUrl, 'shareAppUrl': newShareAppUrl,
       }, SetOptions(merge: true));
-      twitchUrl = newTwitchUrl; discordUrl = newDiscordUrl; youtubeUrl = newYoutubeUrl; notifyListeners();
+      twitchUrl = newTwitchUrl; discordUrl = newDiscordUrl; youtubeUrl = newYoutubeUrl; shareAppUrl = newShareAppUrl; notifyListeners();
     } catch (e) {
       debugPrint("Erreur URL: $e");
     }
@@ -261,6 +270,7 @@ class AppState extends ChangeNotifier {
         tournamentTitle = data['tournamentTitle'] ?? "Tournoi Débutant - Saison 1";
         tournamentDesc = data['tournamentDesc'] ?? "Les inscriptions pour le prochain tournoi sont ouvertes. Les places sont limitées !";
         discordUrl = data['discordUrl'] ?? "https://discord.gg/votre_lien_ici";
+        shareAppUrl = data['shareAppUrl'] ?? "";
         latestAppVersionName = data['latestAppVersionName']?.toString() ?? data['latestAppVersionCode']?.toString() ?? "";
         updateUrl = data['updateUrl'] ?? "";
         updateMessage = data['updateMessage'] ?? "Une nouvelle version de l'application est disponible, veuillez la télécharger !";

@@ -81,6 +81,8 @@ class _MainLayoutState extends State<MainLayout> {
   final GlobalKey _liveKey = GlobalKey();
   final GlobalKey _tournamentKey = GlobalKey();
   final GlobalKey _logoKey = GlobalKey(); // Nouvelle clé pour le message de bienvenue
+  final GlobalKey _shareKey = GlobalKey();
+  final GlobalKey _profileKey = GlobalKey();
   
   late TutorialCoachMark tutorialCoachMark;
 
@@ -98,6 +100,7 @@ class _MainLayoutState extends State<MainLayout> {
       Future.delayed(const Duration(seconds: 1), () {
         _showTutorial();
       });
+      // Marquer comme vu après avoir lancé le tutoriel (pas avant)
       await prefs.setBool('has_seen_tutorial', true);
     }
   }
@@ -136,6 +139,34 @@ class _MainLayoutState extends State<MainLayout> {
               builder: (context, controller) => _buildTutorialContent(
                 "Alertes & Notifications", 
                 "Clique sur cette cloche pour choisir exactement les alertes que tu souhaites recevoir.",
+                controller
+              ),
+            ),
+          ],
+        ),
+        TargetFocus(
+          identify: "shareTarget",
+          keyTarget: _shareKey,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) => _buildTutorialContent(
+                "Partager", 
+                "Utilise ce bouton pour partager facilement l'application avec tes amis !",
+                controller
+              ),
+            ),
+          ],
+        ),
+        TargetFocus(
+          identify: "profileTarget",
+          keyTarget: _profileKey,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) => _buildTutorialContent(
+                "Profil & Codes", 
+                "Ce bouton profil permet aux membres d'accéder à leurs informations et à leurs codes exclusifs.",
                 controller
               ),
             ),
@@ -490,7 +521,7 @@ class _MainLayoutState extends State<MainLayout> {
     final bool showStaff = appState.isStaff;
 
     final List<Widget> pages = [
-      HomeScreen(bellKey: _bellKey, liveKey: _liveKey, tournamentKey: _tournamentKey, logoKey: _logoKey),
+      HomeScreen(bellKey: _bellKey, liveKey: _liveKey, tournamentKey: _tournamentKey, logoKey: _logoKey, shareKey: _shareKey, profileKey: _profileKey),
       const SizedBox(), // Remplacé par le modal Réseaux
       const TournamentScreen(), // Nouveau tab Tournois
       const CodesScreen(),

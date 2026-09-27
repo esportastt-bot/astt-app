@@ -28,6 +28,7 @@ class _StaffScreenState extends State<StaffScreen> {
   final TextEditingController _twitchUrlController = TextEditingController();
   final TextEditingController _discordUrlController = TextEditingController();
   final TextEditingController _youtubeUrlController = TextEditingController();
+  final TextEditingController _shareAppUrlController = TextEditingController();
   
   final TextEditingController _liveTitleController = TextEditingController();
   final TextEditingController _liveDescController = TextEditingController();
@@ -66,6 +67,11 @@ class _StaffScreenState extends State<StaffScreen> {
         _youtubeUrlController.text = appState.youtubeUrl;
       } else {
         _youtubeUrlController.text = "https://youtube.com/...";
+      }
+      if (appState.shareAppUrl.isNotEmpty) {
+        _shareAppUrlController.text = appState.shareAppUrl;
+      } else {
+        _shareAppUrlController.text = "";
       }
       
       _liveTitleController.text = appState.liveTitle;
@@ -259,6 +265,7 @@ class _StaffScreenState extends State<StaffScreen> {
     _twitchUrlController.dispose();
     _discordUrlController.dispose();
     _youtubeUrlController.dispose();
+    _shareAppUrlController.dispose();
     _liveTitleController.dispose();
     _liveDescController.dispose();
     _tournamentTitleController.dispose();
@@ -640,7 +647,7 @@ class _StaffScreenState extends State<StaffScreen> {
                             builder: (context) => AlertDialog(
                               backgroundColor: const Color(0xFF1E2129),
                               title: Text('Supprimer ?', style: GoogleFonts.chakraPetch(color: Colors.white)),
-                              content: Text('Supprimer dÃ©finitivement "${data['title']}" ?', style: const TextStyle(color: Colors.white70)),
+                              content: Text('Supprimer définitivement "${data['title']}" ?', style: const TextStyle(color: Colors.white70)),
                               actions: [
                                 TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('ANNULER', style: TextStyle(color: Colors.grey))),
                                 ElevatedButton(
@@ -703,7 +710,7 @@ class _StaffScreenState extends State<StaffScreen> {
                         Text(data['description'] ?? '', style: const TextStyle(color: Colors.white70)),
                         if (data['linkText'] != null) ...[
                           const SizedBox(height: 8),
-                          Text('ðŸ”— ${data['linkText']}', style: const TextStyle(color: Color(0xFF00D4FF), fontSize: 12)),
+                          Text('🔗 ${data['linkText']}', style: const TextStyle(color: Color(0xFF00D4FF), fontSize: 12)),
                         ]
                       ],
                     ),
@@ -776,12 +783,18 @@ class _StaffScreenState extends State<StaffScreen> {
                   decoration: InputDecoration(labelText: 'Lien de la chaîne YouTube', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
                   style: const TextStyle(fontSize: 12),
                 ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _shareAppUrlController,
+                  decoration: InputDecoration(labelText: 'Lien de partage de l\'application', filled: true, fillColor: Colors.black.withValues(alpha: 0.2), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none)),
+                  style: const TextStyle(fontSize: 12),
+                ),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: TextButton.icon(
                     onPressed: () {
-                      appState.setSocialUrls(_twitchUrlController.text.trim(), _discordUrlController.text.trim(), _youtubeUrlController.text.trim());
+                      appState.setSocialUrls(_twitchUrlController.text.trim(), _discordUrlController.text.trim(), _youtubeUrlController.text.trim(), _shareAppUrlController.text.trim());
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Réseaux mis à jour !'), backgroundColor: Colors.green));
                     },
                     icon: const Icon(Icons.save, size: 16),

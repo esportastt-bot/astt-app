@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../state/app_state.dart';
 import '../widgets/floating_embers.dart';
@@ -17,8 +18,18 @@ class HomeScreen extends StatefulWidget {
   final GlobalKey? liveKey;
   final GlobalKey? tournamentKey;
   final GlobalKey? logoKey;
+  final GlobalKey? shareKey;
+  final GlobalKey? profileKey;
 
-  const HomeScreen({super.key, this.bellKey, this.liveKey, this.tournamentKey, this.logoKey});
+  const HomeScreen({
+    super.key,
+    this.bellKey,
+    this.liveKey,
+    this.tournamentKey,
+    this.logoKey,
+    this.shareKey,
+    this.profileKey,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -214,11 +225,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        IconButton(
-                          icon: Icon(Icons.person_outline, color: appState.currentUser != null ? Colors.green : Colors.grey),
-                          onPressed: () {
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: IconButton(
+                            key: widget.shareKey,
+                            icon: const Icon(Icons.share, color: Colors.white70),
+                            onPressed: () {
+                              final shareUrl = appState.shareAppUrl.isNotEmpty ? " ${appState.shareAppUrl}" : "";
+                              // ignore: deprecated_member_use
+                              Share.share('Rejoins-nous sur l\'application officielle de l\'ASTT E-Sport !$shareUrl');
+                            },
+                          ),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              key: widget.profileKey,
+                              icon: Icon(Icons.person_outline, color: appState.currentUser != null ? Colors.green : Colors.grey),
+                              onPressed: () {
                             if (appState.currentUser == null) {
                               Navigator.push(context, MaterialPageRoute(builder: (_) => const AuthScreen()));
                             } else {
@@ -276,6 +303,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           onPressed: () => _showNotificationSettings(context),
                         ),
                         const SizedBox(width: 16),
+                          ],
+                        ),
                       ],
                     ),
                     SizedBox(
